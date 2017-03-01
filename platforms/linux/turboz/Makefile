@@ -6,17 +6,23 @@ TURBOOBJS= $(TOD)/FlexMemoryRule.o $(TOD)/Symbols.o $(TOD)/Disassembly.o $(TOD)/
 
 
 OBJS= $(GEAROBJS) $(TURBOOBJS) $(DISOBJS)
-CFLAGS= -Wall -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I ../../../src -I ../../../src/z80ex/include  -std=c++11 
-LDFLAGS= -lrhtv -pthread 
+CFLAGS= -Wall -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I ../../../src -I ../../../src/z80ex/include
+LDFLAGS= -lrhtv -pthread
+CPPFLAGS= -std=c++11 
 
 turboz: $(OBJS)
 	g++ -o ./turboz $(OBJS) $(LDFLAGS)
 
+#dependents
+-include $(OBJS:%.o=%.d)
+
 $(OD)/%.o: ../../../src/%.cpp
-	g++ $(CFLAGS) -c $< -o $@
+	g++ $(CFLAGS) $(CPPFLAGS) -g -c -o $@ $<
+	g++ -MM $(CFLAGS) $(CPPFLAGS) $< -MF $(@:.o=.d) -MT $@
 
 $(OD)/z80ex/%.o: ../../../src/z80ex/%.c
-	gcc $(CFLAGS) -c $< -o $@ -I ../../../src/z80ex/include
+	gcc $(CFLAGS) -g -c -o $@ $< -I ../../../src/z80ex/include
+	gcc -MM $(CFLAGS) $< -MF $(@:.o=.d) -MT $@ -I ../../../src/z80ex/include
 
 clean:
 	rm $(OBJS) ./turboz
