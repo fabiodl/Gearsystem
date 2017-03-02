@@ -10,9 +10,12 @@
 
 #define Uses_TCheckBoxes
 #define Uses_TSItem
+#define Uses_TInputLine
+#define Uses_TStaticText
 #include <tv.h>
+#include "cistring.h"
 
-class ToggleButton:public TButton{
+class ToggleButton:public TButtonRef{
 public:
 
   ToggleButton(const TRect& bounds,const char *uTitle,const char* dTitle,ushort aCommand,ushort aFlags); 
@@ -36,7 +39,7 @@ private:
 
 
 ToggleButton::ToggleButton(const TRect& bounds,const char * _uTitle,const char* _dTitle,ushort aCommand,ushort aFlags):
-  TButton(bounds,_uTitle,aCommand,aFlags),uTitle(_uTitle),dTitle(_dTitle),state_down(false){}
+  TButtonRef(bounds,_uTitle,aCommand,aFlags),uTitle(_uTitle),dTitle(_dTitle),state_down(false){}
   
 void ToggleButton::press(){
   state_down=!state_down;
@@ -68,6 +71,7 @@ void printTime(const std::chrono::time_point<std::chrono::high_resolution_clock>
 }
 
 
+static const int freqChars=10;
 
   ExecutionWindow::ExecutionWindow(const TRect& bounds,System& _sys):
                   TWindowInit( &TDialog::initFrame ),
@@ -77,10 +81,15 @@ void printTime(const std::chrono::time_point<std::chrono::high_resolution_clock>
 {
   Placer p(1,1);
 
-  TView *b = new TCheckBoxes( p.place(13,1,true),
-                              new TSItem( "Rea~l~time",0)
+  realtimeCheck= new TCheckBoxes( p.place(14,1,true),
+                              new TSItem( "~F~ixedFreq",0)
                               );
-  insert( b );
+  insert( realtimeCheck );
+ 
+  freqInputLine=new TInputLine(p.spaceAndPlace(4,0,freqChars,1),freqChars);
+  insert(freqInputLine);
+  freqInputLine->setData(const_cast<char*>("NTSC"));
+  //insert(new TStaticText(p.place(3,1),"Hz"));
   p.newLine();
         
 
@@ -119,11 +128,37 @@ void printTime(const std::chrono::time_point<std::chrono::high_resolution_clock>
     
     //std::this_thread::sleep_for(waitTime);
   };
-  freq=3579540;
+  freq=1;
 }
 
 
 
 void ExecutionWindow::requestRun(const Spinner::HaltCondition* haltCondition){
-  TurboZ::spinner.setWork(&realtimeWork,haltCondition);  
+  ushort isRealtime;
+  realtimeCheck->getData(&isRealtime);
+  if (isRealtime){
+    char buffer[freqChars];
+    freqInputLine->getData(buffer);
+    if (istring(buffer)=="NTSC"){
+      freq=3579540;
+    }else if (istring(buffer)=="PAL"){
+      freq=3546893;
+    }else{
+      bool invalid=false;
+      try{
+        freq=std::stoi(buffer);
+      }catch(std::invalid_argument &){
+        invalid=true;
+      }catch(std::out_of_range &){
+        invalid=true;
+      }        
+      if (invalid||freq<=0){
+        freq=1;
+      }
+      sprintf(buffer,"%d",freq);
+      freqInputLine->setData(buffer);
+    }
+  }
+    
+  TurboZ::spinner.setWork(isRealtime?&realtimeWork:&fastWork,haltCondition);  
 }

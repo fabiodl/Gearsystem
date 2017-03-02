@@ -54,6 +54,7 @@ public:
   EightBitRegister* getRegister(Monitor::Register r);
   u16 GetPC();
 private:
+  friend class ProcessorSymbols;
     typedef void (Processor::*OPCptr) (void);
     OPCptr m_OPCodes[256];
     OPCptr m_OPCodesCB[256];

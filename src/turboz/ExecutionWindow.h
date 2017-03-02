@@ -12,6 +12,8 @@
 
 
 class ToggleButton;
+class TCheckBoxes;
+class TInputLine;
 class ExecutionWindow:public TDialog,public Tracked<ExecutionWindow>{
 public:
   ExecutionWindow(const TRect& bounds,System& sys);
@@ -20,6 +22,8 @@ private:
   System& sys;
   Spinner::Work fastWork,realtimeWork;
   uint32_t freq;
+  TCheckBoxes* realtimeCheck;
+  TInputLine* freqInputLine;
 };
 
 
