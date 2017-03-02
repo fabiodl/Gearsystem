@@ -57,3 +57,9 @@ TRect Placer::rightOf(const TRect& a,int sizex,int sizey){
   //printRect(r);
   return r;
 }
+
+TRect Placer::move(const TRect& a,int movex,int movey){
+  TRect b(a);
+  b.move(movex,movey);
+  return b;
+}

@@ -28,7 +28,7 @@ Spinner::~Spinner(){
 
 
 void Spinner::setWork(Work* _work,const HaltCondition* _haltCondition){
-  std::cout<<"setting work"<<std::endl;
+  //std::cout<<"setting work"<<std::endl;
   std::unique_lock<std::mutex> lock(workm);
   while(state!=idle && state!= destroyRequested){
     if (state==working){
@@ -68,9 +68,9 @@ void Spinner::waitForWork(){
   while(state!=destroyRequested){
     if (state==workRequested){
       state=working;      
-      std::cout<<"work init"<<std::endl;
+      //std::cout<<"work init"<<std::endl;
       work->init();
-      std::cout<<"working"<<std::endl;
+      //std::cout<<"working"<<std::endl;
       while(state==working){ //i.e. not haltRequested or destroyRequested
         unlock_guard<std::unique_lock<std::mutex> > unlocker(lock);
         try{
@@ -85,7 +85,7 @@ void Spinner::waitForWork(){
       }//while state==working
       state=idle;
       cv.notify_all();
-      std::cout<<"now idle"<<std::endl;
+      //std::cout<<"now idle"<<std::endl;
     }//if state==workRequested
     cv.wait(lock);
   }

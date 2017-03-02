@@ -36,8 +36,8 @@ private:
 
 Placer winPlacer(0,0);
 template<> TRect WindowFactory<ProcessorWindow>::initPos(winPlacer.place(15,12,true));
-template<> TRect WindowFactory<ExecutionWindow>::initPos(winPlacer.spaceAndPlace(0,1,20,5));
-template<> TRect WindowFactory<DisassemblyWindow>::initPos(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,60,20) );
+template<> TRect WindowFactory<ExecutionWindow>::initPos(winPlacer.spaceAndPlace(0,1,20,10));
+template<> TRect WindowFactory<DisassemblyWindow>::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,60,20),5,0) );
 
 
 template<typename Window>
@@ -174,7 +174,7 @@ void TurboZ::handleEvent(TEvent& event){
       clearEvent(event);
       break;
     case cmStep:
-      system.processor.Tick();
+      system.Tick();
       refresh();
       clearEvent(event);
       break;
@@ -237,7 +237,6 @@ TPalette& TurboZ::getPalette() const{
 Spinner TurboZ::spinner;
 
 void TurboZ::refresh(){
-  //deskTop->redraw();
   message(this,evBroadcast,cmRefreshState,NULL);
 }
 
@@ -251,6 +250,13 @@ void TurboZ::idle(){
     upToDate=spinner.isIdle();
   }
   TApplication::idle();
+  static bool firstRun=true;
+  if (firstRun){
+    redraw();
+    deskTop->redraw();
+    firstRun=false;      
+  }
+    
 }
 
 
@@ -258,7 +264,7 @@ int main()
 {
 
   System system;
-  TurboZ turboz(system);
+  TurboZ turboz(system);  
   turboz.run();
   return 0;
 }

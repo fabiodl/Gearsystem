@@ -16,6 +16,7 @@ public:
   void space(int sizex);
   static TRect center(const TRect& bounds,int sizex,int sizey);
   static TRect rightOf(const TRect& a,int sizex,int sizey);
+  static TRect move(const TRect& a,int movex,int movey);
 };
 
 

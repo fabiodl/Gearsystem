@@ -90,7 +90,7 @@ static const int freqChars=10;
   insert(freqInputLine);
   freqInputLine->setData(const_cast<char*>("NTSC"));
   //insert(new TStaticText(p.place(3,1),"Hz"));
-  p.newLine();
+  p.newLine(2);
         
 
   
