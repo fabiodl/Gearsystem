@@ -94,8 +94,8 @@ static const int freqChars=10;
         
 
   
-  insert( new TButton( p.place(8,2), "~S~tep", cmStep,bfDefault ));
-  auto run=new ToggleButton( p.place(8,2), "~R~un","S~t~op", cmRun,bfNormal);
+  insert( new TButton( p.place(8,2), "~S~tep", cmStep,bfNormal ));
+  auto run=new ToggleButton( p.place(8,2), "~R~un","S~t~op",cmCancel,bfNormal);
   ParamType* param=new ParamType(this,run);
   run->setCallBack(buttonCallback,param);
   insert(run);  

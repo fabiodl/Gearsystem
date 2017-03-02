@@ -14,8 +14,9 @@ TRect Placer::place(int sizex,int sizey,bool newline){
 }
 
 
-void Placer::space(int sizex){
+void Placer::space(int sizex,int sizey){
   x+=sizex;
+  y+=sizey;
 }
 
 void Placer::newLine(int sizey){

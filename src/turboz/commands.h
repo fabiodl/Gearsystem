@@ -7,8 +7,9 @@ enum Commands{
   cmShowExecutionWindow,
   cmAddDisassemblyWindow,
   cmRefreshState,
-  cmStep,
-  cmRun  
+  cmOptionDialog,
+  cmGoTo,
+  cmStep
 };
 
 

@@ -15,6 +15,7 @@
 #define Uses_TStatusItem
 #define Uses_TPalette
 #define Uses_RProgram
+#define Uses_MsgBox
 #include <tv.h>
 #include <algorithm>
 #include "turbozPalette.h"
@@ -58,7 +59,9 @@ TRect WindowFactory<Window>::getPos(){
 template<typename Window>
 void WindowFactory<Window>::showWindow(TGroup* g,System& system){
   if (ObjectTracker<Window>::objs.size()){
-    g->setCurrent(ObjectTracker<Window>::objs.back(),TGroup::normalSelect);
+    TView* win=ObjectTracker<Window>::objs.back();
+    g->setCurrent(win,TGroup::normalSelect);
+    win->putInFrontOf(g->first());
   }else{
     addWindow(g,system);
   }
@@ -74,7 +77,11 @@ template<> ExecutionWindow* WindowFactory<ExecutionWindow>::getWindow(System& sy
 }
 
 template<> DisassemblyWindow* WindowFactory<DisassemblyWindow>::getWindow(System& system){
-  return new DisassemblyWindow(getPos(),system);
+  DisassemblyWindow* win=new DisassemblyWindow(getPos(),system);
+  if (ObjectTracker<DisassemblyWindow>::objs.size()==0){
+    win->setFollowPC(true);
+  }
+  return win;
 }
 
 
@@ -94,7 +101,7 @@ void loadPalette(TPalette& palette){
   palette[TMenuView_SelectedDisabled]=palette::CYAN*palette::BACKGROUND+palette::DARKGRAY;
   palette[TMenuView_SelectedShortcut]=palette::CYAN*palette::BACKGROUND+palette::GRAY; 
   palette[TWindowBlue_FramePassive]=background*palette::BACKGROUND+palette::GRAY;
-  palette[TWindowBlue_FrameActive]=background*palette::BACKGROUND+palette::GRAY;
+  palette[TWindowBlue_FrameActive]=background*palette::BACKGROUND+palette::WHITE;
   palette[TWindowBlue_FrameIcon]=background*palette::BACKGROUND+palette::WHITE;
   palette[TWindowBlue_ScrollBarPage]=background*palette::BACKGROUND+palette::GRAY;
 
@@ -153,12 +160,12 @@ TurboZ::TurboZ(System& _system) :
   showWindow<ExecutionWindow>();
   //std::cout<<"turboz is "<<((TView*)(this))<<std::endl;
   //std::cout<<"desktop is"<<(TView*)deskTop<<std::endl;
- 
+  disableCommand(cmOptionDialog);
+  disableCommand(cmGoTo);
   
 }
 
 void TurboZ::handleEvent(TEvent& event){
-  TApplication::handleEvent(event); 
   if (event.what==evCommand){
     switch(event.message.command){
     case cmShowProcessorWindow:
@@ -178,8 +185,13 @@ void TurboZ::handleEvent(TEvent& event){
       refresh();
       clearEvent(event);
       break;
+    case cmQuit:
+      if (messageBox("Quit, are you sure?",mfYesButton|mfCancelButton)==cmCancel){
+        clearEvent(event);
+      }
     }
   }
+  TApplication::handleEvent(event); 
 };
 
 template<typename Window> void TurboZ::showWindow(){
@@ -203,16 +215,16 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
      *new TSubMenu( "~F~ile", kbAltF )+
      //*new TMenuItem( "~O~pen", cmOpen, kbF3, hcNoContext, "F3" )+
      newLine()+
-     *new TMenuItem( "E~x~it", cmQuit, cmQuit, hcNoContext, "" )+
+     *new TMenuItem( "E~x~it", cmQuit, kbAltX, hcNoContext, "" )+
      *new TSubMenu( "~V~iew", kbAltW )+
-     *new TMenuItem( "~R~egisters", cmShowProcessorWindow,  cmShowProcessorWindow, hcNoContext, "" )
+     *new TMenuItem( "~R~egisters", cmShowProcessorWindow,  kbNoKey, hcNoContext, "" )
      );
 }
 
 
 
 TStatusLine *TurboZ::initStatusLine(TRect r)
-{
+{  
   r.a.y = r.b.y - 1;     // move top to 1 line above bottom
   return new TStatusLine
     (
@@ -220,12 +232,17 @@ TStatusLine *TurboZ::initStatusLine(TRect r)
      *new TStatusDef( 0, 0xFFFF ) +
      // set range of help contexts
      *new TStatusItem( 0, kbF10, cmMenu )+
-     *new TStatusItem( "~R~eg", kbAltR, cmShowProcessorWindow)+
-     *new TStatusItem( "~E~xec", kbAltE, cmShowExecutionWindow)+
+     *new TStatusItem( "~C~pu", kbAltC, cmShowProcessorWindow)+
      *new TStatusItem( "~D~isasm", kbAltD, cmAddDisassemblyWindow)+
-     *new TStatusItem( "~Alt-F3~ Close", kbAltF3, cmClose )
+     *new TStatusItem( "~E~xec", kbAltE, cmShowExecutionWindow)+
+
+     *new TStatusItem( "~Alt-F3~ Close", kbAltF3, cmClose )+
+     *new TStatusItem( "~Alt-G~ Go to", kbAltG, cmGoTo )+
+     *new TStatusItem( "~Alt-O~ Options", kbAltO, cmOptionDialog )
+
      // define an item
      );
+  
 
 }
 

@@ -136,9 +136,9 @@ GoToDialog::GoToDialog(const TRect& pos,Symbols& _symbols,Processor& _processor)
     insert(listBox);
     placer.newLine();   
     placer.space(-1);
-    insert( new TButton(placer.place(10,2), "~O~K", cmOK,
+    insert( new TButton(placer.place(10,2), "OK", cmOK,
                     bfDefault ));
-    insert( new TButton(placer.place(10,2), "~C~ancel", cmCancel,
+    insert( new TButton(placer.place(10,2), "Cancel", cmCancel,
                                   bfNormal ));   
     selectNext(false);
 

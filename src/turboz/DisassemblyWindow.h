@@ -18,10 +18,15 @@ public:
   uint16_t getPC(){return sys.processor.GetPC();}
   void handleEvent(TEvent& event);
   void scrollTo(uint16_t addr);
+  void setState(ushort aState,Boolean enable);
+  void setFollowPC(bool b){followPC=b;}
+  bool isFollowPC(){return followPC;}
 private:
   System& sys;
   void showGoToDialog();
+  void showOptionsDialog();
   TDynamicScrollBar* vScrollBar;
+  bool followPC;
 };
 
 

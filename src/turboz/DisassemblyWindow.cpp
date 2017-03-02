@@ -7,6 +7,9 @@
 #define Uses_TFrame
 #define Uses_TEvent
 #define Uses_TKeys
+#define Uses_TCheckBoxes
+#define Uses_TSItem
+#define Uses_TButton
 #include <tv.h>
 #include "Placer.h"
 #include "commands.h"
@@ -20,7 +23,6 @@ public:
   void handleEvent(TEvent& event);
 private:
   void showGoToDialog();
-  bool followPC;
   DisassemblyWindow* getWindow();
 };
 
@@ -28,15 +30,14 @@ private:
 
 TView* getRoot(TView* v){
   while(v->owner!=NULL){
-    std::cout<<"going to owner "<<v<<std::endl;
+    //std::cout<<"going to owner "<<v<<std::endl;
     v=v->owner;
   }
   return v;
 }
 
 DisassemblyScroller:: DisassemblyScroller( const TRect& bounds, TScrollBar *aHScrollBar,TScrollBar *aVScrollBar ):
-  TScroller( bounds, aHScrollBar, aVScrollBar ),
-  followPC(true)
+  TScroller( bounds, aHScrollBar, aVScrollBar )
 {
     growMode = gfGrowHiX | gfGrowHiY;
     options = options | ofFramed;
@@ -78,15 +79,59 @@ void DisassemblyWindow::showGoToDialog(){
 
 }
 
+void DisassemblyWindow::showOptionsDialog(){
+  TDialog* opt=new TDialog(Placer::center(owner->getBounds(),24,7),"Options");
+  Placer placer(1,2);
+  opt->insert(new TCheckBoxes( placer.place(14,1,true),
+                              new TSItem( "~F~ollow PC",0)
+                               ));
+  placer.newLine();
+  opt->insert( new TButton(placer.place(10,2), "OK", cmOK,
+                    bfDefault ));
+  opt->insert(new TButton(placer.place(10,2), "Cancel", cmCancel,
+                              bfNormal ));
+  ushort data=isFollowPC()?1:0;
+  
+  opt->setData(&data);
+  if( opt ){
+    ushort control=static_cast<TGroup*>(owner)->execView( opt );
+    if( control != cmCancel ){
+      ushort data;
+      opt->getData(&data);
+      setFollowPC(data&1);
+    }
+  }
+}
 
-void DisassemblyWindow::handleEvent(TEvent& event){
-  if (event.what== evKeyDown  && event.keyDown.keyCode ==kbAltG){
-    showGoToDialog();
-    clearEvent( event );
+    void DisassemblyWindow::handleEvent(TEvent& event){
+  if (event.what==evCommand){
+    switch(event.message.command){
+    case cmGoTo:
+      showGoToDialog();
+      clearEvent( event );
+      break;
+    case cmOptionDialog:
+      showOptionsDialog();
+      clearEvent(event);
+    }
   }
   TWindow::handleEvent(event);  
 }
 
+void DisassemblyWindow::setState( ushort aState, Boolean enable){
+  if (aState&sfSelected){
+    if (enable){
+      enableCommand(cmGoTo);
+      enableCommand(cmOptionDialog);
+    }else{
+      disableCommand(cmGoTo);
+      enableCommand(cmOptionDialog);
+    }
+  }
+   
+  
+  TWindow::setState(aState,enable);
+}
 
 DisassemblyWindow* DisassemblyScroller::getWindow(){
   return static_cast<DisassemblyWindow*>(owner);
@@ -100,7 +145,7 @@ void DisassemblyScroller::handleEvent(TEvent& event){
       break;
     case cmRefreshState:
       //std::cout<<"Disassembly window refresh"<<std::endl;
-      if (followPC){
+      if (getWindow()->isFollowPC()){
         getWindow()->scrollTo((std::max)(0,getWindow()->getPC()-size.y/2));
       }
       draw();
@@ -116,7 +161,8 @@ void DisassemblyScroller::handleEvent(TEvent& event){
 DisassemblyWindow::DisassemblyWindow(const TRect& bounds,System& _sys):
    TWindowInit( &DisassemblyWindow::initFrame ),
    TWindow( bounds,"Disasm 0000", 0),
-   sys(_sys)  
+   sys(_sys),
+   followPC(false)
 {
    
   TRect r = getExtent();
