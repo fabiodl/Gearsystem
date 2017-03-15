@@ -23,11 +23,11 @@
 
 template<typename Window> class WindowFactory{
 public:
-  static void addWindow(TGroup* g,System& system);
-  static void showWindow(TGroup* g,System& system);
+  static void addWindow(TGroup* g,TurboZ* turboz);
+  static void showWindow(TGroup* g,TurboZ* turboz);
   static TRect initPos;
 private:
-  static Window* getWindow(System& system);
+  static Window* getWindow(TurboZ* turboz);
   static TRect getPos();
 };
 
@@ -42,8 +42,8 @@ template<> TRect WindowFactory<DisassemblyWindow>::initPos(Placer::move(Placer::
 
 
 template<typename Window>
-void WindowFactory<Window>::addWindow(TGroup* g,System& system){
-  Window* win=getWindow(system);
+void WindowFactory<Window>::addWindow(TGroup* g,TurboZ* turboz){
+  Window* win=getWindow(turboz);
   g->insert(win);
   ObjectTracker<Window>::objs.push_back(win);
 }
@@ -57,27 +57,27 @@ TRect WindowFactory<Window>::getPos(){
 
 
 template<typename Window>
-void WindowFactory<Window>::showWindow(TGroup* g,System& system){
+void WindowFactory<Window>::showWindow(TGroup* g,TurboZ* turboz){
   if (ObjectTracker<Window>::objs.size()){
     TView* win=ObjectTracker<Window>::objs.back();
     g->setCurrent(win,TGroup::normalSelect);
     win->putInFrontOf(g->first());
   }else{
-    addWindow(g,system);
+    addWindow(g,turboz);
   }
 }
 
 
-template<> ProcessorWindow* WindowFactory<ProcessorWindow>::getWindow(System& system){
-  return new ProcessorWindow(getPos(),system.processor);
+template<> ProcessorWindow* WindowFactory<ProcessorWindow>::getWindow(TurboZ* turboz){
+  return new ProcessorWindow(getPos(),turboz->system.processor);
 }
 
-template<> ExecutionWindow* WindowFactory<ExecutionWindow>::getWindow(System& system){
-  return new ExecutionWindow(getPos(),system);
+template<> ExecutionWindow* WindowFactory<ExecutionWindow>::getWindow(TurboZ* turboz){
+  return new ExecutionWindow(getPos(),turboz->system,turboz);
 }
 
-template<> DisassemblyWindow* WindowFactory<DisassemblyWindow>::getWindow(System& system){
-  DisassemblyWindow* win=new DisassemblyWindow(getPos(),system);
+template<> DisassemblyWindow* WindowFactory<DisassemblyWindow>::getWindow(TurboZ* turboz){
+  DisassemblyWindow* win=new DisassemblyWindow(getPos(),turboz->system);
   if (ObjectTracker<DisassemblyWindow>::objs.size()==0){
     win->setFollowPC(true);
   }
@@ -123,7 +123,7 @@ void loadPalette(TPalette& palette){
   palette[TDialog_ButtonNormal]=buttonback*palette::BACKGROUND+palette::BLUE;
   palette[TDialog_ButtonDefault]=buttonback*palette::BACKGROUND+palette::WHITE;
   palette[TDialog_ButtonSelected]=buttonback*palette::BACKGROUND+palette::WHITE;
-  palette[TDialog_ButtonDisabled]=palette::GRAY+palette::CYAN;
+  palette[TDialog_ButtonDisabled]=palette::BLACK*palette::BACKGROUND+palette::DARKGRAY;
   palette[TDialog_ButtonShortcut]=buttonback*palette::BACKGROUND+palette::CYAN+palette::LIGHT;
 
 
@@ -147,7 +147,7 @@ TurboZ::TurboZ(System& _system) :
              ),
   system(_system),
   palette(nullptr,0),
-  upToDate(false)
+  spinnerHalted(true)//to trigger a refresh
 {
   palette.data=new uint8_t[palette::PALETTE_LENGTH+1];
   palette.data[0]=palette::PALETTE_LENGTH;
@@ -162,7 +162,10 @@ TurboZ::TurboZ(System& _system) :
   //std::cout<<"desktop is"<<(TView*)deskTop<<std::endl;
   disableCommand(cmOptionDialog);
   disableCommand(cmGoTo);
-  
+  disableCommand(cmHalt);
+  spinner.onHalt.push_back([this]{
+      spinnerHalted=true;      
+    });
 }
 
 void TurboZ::handleEvent(TEvent& event){
@@ -180,11 +183,6 @@ void TurboZ::handleEvent(TEvent& event){
       addWindow<DisassemblyWindow>();
       clearEvent(event);
       break;
-    case cmStep:
-      system.Tick();
-      refresh();
-      clearEvent(event);
-      break;
     case cmQuit:
       if (messageBox("Quit, are you sure?",mfYesButton|mfCancelButton)==cmCancel){
         clearEvent(event);
@@ -195,11 +193,11 @@ void TurboZ::handleEvent(TEvent& event){
 };
 
 template<typename Window> void TurboZ::showWindow(){
-  WindowFactory<Window>::showWindow(deskTop,system);
+  WindowFactory<Window>::showWindow(deskTop,this);
 }
 
 template<typename Window> void TurboZ::addWindow(){
-  WindowFactory<Window>::addWindow(deskTop,system);
+  WindowFactory<Window>::addWindow(deskTop,this);
 }
 
 
@@ -251,7 +249,7 @@ TPalette& TurboZ::getPalette() const{
  return const_cast<TPalette&>(palette);
 };
 
-Spinner TurboZ::spinner;
+
 
 void TurboZ::refresh(){
   message(this,evBroadcast,cmRefreshState,NULL);
@@ -259,13 +257,17 @@ void TurboZ::refresh(){
 
 
 void TurboZ::idle(){    
-  if (!upToDate){
-    //std::cout<<"refresh"<<std::endl;
-    upToDate=spinner.isIdle(); //needs to be idle before the refresh
+
+  if (!spinner.isIdle()){
     refresh();    
-  }else{
-    upToDate=spinner.isIdle();
   }
+
+  if(spinnerHalted.exchange(false)){
+    enableCommand(cmRun);
+    disableCommand(cmHalt);    
+    refresh();    
+  }
+  
   TApplication::idle();
   static bool firstRun=true;
   if (firstRun){
@@ -274,6 +276,14 @@ void TurboZ::idle(){
     firstRun=false;      
   }
     
+}
+
+void TurboZ::requestRun(Spinner::Work* work,Spinner::HaltCondition* haltCondition){
+  spinner.setWork(work,haltCondition);
+}
+
+void TurboZ::requestHalt(){
+  spinner.halt();
 }
 
 

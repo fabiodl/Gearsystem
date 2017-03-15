@@ -7,6 +7,9 @@
 #include <tv.h>
 #include "Spinner.h"
 #include <stdint.h>
+#include <atomic>
+
+
 
 class TurboZ : public TApplication
 {
@@ -17,15 +20,20 @@ public:
   void handleEvent(TEvent& event);
   void remove(TView* view);
   TPalette& getPalette() const;
-  static Spinner spinner;
   void idle();
-  void refresh();
+  void requestRun(Spinner::Work* work,Spinner::HaltCondition* haltCondition);
+  void requestHalt();
+  
 private:
   template<typename WindowType> void showWindow();
   template<typename WindowType> void addWindow();
+  template<typename Window>  friend class WindowFactory;
   System& system;
   TPalette palette;
-  bool upToDate;
+  Spinner spinner;
+  void refresh();
+  
+  std::atomic_bool spinnerHalted;
 };
 
 #endif

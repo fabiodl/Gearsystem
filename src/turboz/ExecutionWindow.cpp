@@ -12,104 +12,145 @@
 #define Uses_TSItem
 #define Uses_TInputLine
 #define Uses_TStaticText
+#define Uses_TButton
 #include <tv.h>
 #include "cistring.h"
+#include "rootView.h"
 
-class ToggleButton:public TButtonRef{
-public:
+static const int FREQCHARS=10;
 
-  ToggleButton(const TRect& bounds,const char *uTitle,const char* dTitle,ushort aCommand,ushort aFlags); 
 
-  bool isStateUp(){
-    return !state_down;
-  }
-
-  bool isStateDown(){
-    return state_down;
-  }
-
-  
-  
-private:
+class TCondButton:public TButton{
+public:  
+  TCondButton(const TRect& bounds,
+              const char *aTitle,
+              ushort aCommand,
+              ushort aFlags,
+              ExecutionWindow* win,
+              ExecutionWindow::HaltCondition* cond);
+  //void handleEvent( TEvent& event );
   void press();
-  std::string uTitle,dTitle;
-  bool state_down;
+private:
+  ExecutionWindow* win;
+  ExecutionWindow::HaltCondition* cond;
 };
 
-
-
-ToggleButton::ToggleButton(const TRect& bounds,const char * _uTitle,const char* _dTitle,ushort aCommand,ushort aFlags):
-  TButtonRef(bounds,_uTitle,aCommand,aFlags),uTitle(_uTitle),dTitle(_dTitle),state_down(false){}
-  
-void ToggleButton::press(){
-  state_down=!state_down;
-  if (state_down){
-    TButton::press();
-  }
-  title=state_down?dTitle.c_str():uTitle.c_str();
-  drawView();
-}
-
-
-typedef std::pair<ExecutionWindow*,ToggleButton* > ParamType;
-
-int buttonCallback(unsigned int command,void* v){
-  ParamType* param=static_cast<ParamType*>(v);
-  if (param->second->isStateDown()){
-    static Spinner::HaltCondition haltCondition=std::bind(&ToggleButton::isStateUp,param->second);
-    param->first->requestRun(&haltCondition);
-  }else{
-    //the halt condition should stop the execution    
-  }
-  return cmValid;
-}
-
-void printTime(const std::chrono::time_point<std::chrono::high_resolution_clock>& p){
-
-  std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(p.time_since_epoch());
-  std::cout<<ms.count()<<std::endl;
-}
-
-
-static const int freqChars=10;
-
-  ExecutionWindow::ExecutionWindow(const TRect& bounds,System& _sys):
-                  TWindowInit( &TDialog::initFrame ),
-                  TDialog(bounds,"Execution"),
-                  sys(_sys)
-                  
+TCondButton::TCondButton(const TRect& bounds,
+                         const char *aTitle,
+                         ushort aCommand,
+                         ushort aFlags,
+                         ExecutionWindow* _win,
+                         ExecutionWindow::HaltCondition* _cond):
+  TButton(bounds,aTitle,aCommand,aFlags),
+  win(_win),
+  cond(_cond)
 {
+}
+
+
+void TCondButton::press(){
+  win->setHaltCondition(cond);
+  TButton::press();
+}
+
+
+void ExecutionWindow::handleEvent( TEvent& event ){
+  if (event.what==evCommand){
+    switch(event.message.command){
+    case cmStep:
+      sys.Tick();
+      clearEvent(event);
+      message( owner, evBroadcast, cmRefreshState, this );
+      break;
+    case cmRun:
+      disableCommand(cmRun);
+      enableCommand(cmHalt);
+      requestRun();
+      clearEvent(event);
+      break;
+    case cmHalt:      
+      disableCommand(cmHalt);
+      requestHalt();
+      enableCommand(cmRun);
+      clearEvent(event);
+      break;
+    }
+  }
+  TDialog::handleEvent(event);
+}
+
+
+
+
+
+
+
+ExecutionWindow::HaltCondition::HaltCondition(){
+  init=[]{};
+  check=[]{return true;};
+}
+
+
+void ExecutionWindow::setHaltCondition(ExecutionWindow::HaltCondition* hc){
+  haltCondition=hc;
+}
+
+ExecutionWindow::ExecutionWindow(const TRect& bounds,System& _sys,TurboZ* _turboz):
+  TWindowInit( &TDialog::initFrame ),
+  TDialog(bounds,"Execution"),
+  sys(_sys),
+  turboz(_turboz)
+  
+{
+  haltCondition=&noRun;
+  runFoverver.check=[]{return false;};
+  
+  auto captureNextPc=[this]{
+    //std::cout<<"initingCondition"<<std::endl;
+    uint16_t addr=sys.processor.GetPC();    
+    haltInitCond.nextPC=addr+sys.disassembly.getInstructionLength(addr);
+    //std::cout<<"target"<<haltInitCond.nextPC<<std::endl;
+  };
+  
+  runOver.init=captureNextPc;
+  runOver.check=[this]{
+    //std::cout<<"checking if pc=="<<haltInitCond.nextPC<<std::endl;
+    return sys.processor.GetPC()==haltInitCond.nextPC;
+  };
+  
+
+  
   Placer p(1,1);
 
   realtimeCheck= new TCheckBoxes( p.place(14,1,true),
                               new TSItem( "~F~ixedFreq",0)
                               );
   insert( realtimeCheck );
- 
-  freqInputLine=new TInputLine(p.spaceAndPlace(4,0,freqChars,1),freqChars);
+
+  freqInputLine=new TInputLine(p.spaceAndPlace(4,0,FREQCHARS,1),FREQCHARS);
   insert(freqInputLine);
   freqInputLine->setData(const_cast<char*>("NTSC"));
   //insert(new TStaticText(p.place(3,1),"Hz"));
   p.newLine(2);
         
-
   
-  insert( new TButton( p.place(8,2), "~S~tep", cmStep,bfNormal ));
-  auto run=new ToggleButton( p.place(8,2), "~R~un","S~t~op",cmCancel,bfNormal);
-  ParamType* param=new ParamType(this,run);
-  run->setCallBack(buttonCallback,param);
-  insert(run);  
-
-
-  fastWork.init=[]{};
+  insert( new TButton( p.place(8,2), "~S~tep", cmStep,bfDefault ));
+  insert( new TButton( p.place(8,2,true), "~H~alt", cmHalt,bfNormal ));
+  insert( new TCondButton( p.place(8,2), "~R~un", cmRun,bfNormal,this,&runFoverver));
+  insert( new TCondButton( p.place(8,2), "~O~ver", cmRun,bfNormal,this,&runOver));
+  
+  
+  
+  fastWork.init=[this]{haltCondition->init();};
   fastWork.job=[this]{
     sys.Tick();
   };
   static std::chrono::time_point<std::chrono::high_resolution_clock>  start;
   static int ticks=0;
-  realtimeWork.init=[]{
+  realtimeWork.init=[this]{
+    haltCondition->init();
     start= std::chrono::high_resolution_clock::now();
-     ticks=0;
+    ticks=0;
   };
   realtimeWork.job=[this]{
     ticks+=sys.Tick();
@@ -129,15 +170,16 @@ static const int freqChars=10;
     //std::this_thread::sleep_for(waitTime);
   };
   freq=1;
+  
 }
 
 
 
-void ExecutionWindow::requestRun(const Spinner::HaltCondition* haltCondition){
+void ExecutionWindow::requestRun(){
   ushort isRealtime;
   realtimeCheck->getData(&isRealtime);
   if (isRealtime){
-    char buffer[freqChars];
+    char buffer[FREQCHARS];
     freqInputLine->getData(buffer);
     if (istring(buffer)=="NTSC"){
       freq=3579540;
@@ -159,6 +201,17 @@ void ExecutionWindow::requestRun(const Spinner::HaltCondition* haltCondition){
       freqInputLine->setData(buffer);
     }
   }
-    
-  TurboZ::spinner.setWork(isRealtime?&realtimeWork:&fastWork,haltCondition);  
+
+  turboz->requestRun(isRealtime?&realtimeWork:&fastWork,&haltCondition->check);  
+}
+
+ void ExecutionWindow::requestHalt(){
+   turboz->requestHalt();
+ }
+
+
+ void printTime(const std::chrono::time_point<std::chrono::high_resolution_clock>& p){
+
+  std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(p.time_since_epoch());
+  std::cout<<ms.count()<<std::endl;
 }

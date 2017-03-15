@@ -27,6 +27,16 @@ Spinner::~Spinner(){
 }
 
 
+void Spinner::halt(){
+  std::unique_lock<std::mutex> lock(workm);
+  while(state!=idle && state!= destroyRequested){
+    if (state==working){
+      state=haltRequested;
+    }
+    cv.wait(lock);
+  }
+}
+
 void Spinner::setWork(Work* _work,const HaltCondition* _haltCondition){
   //std::cout<<"setting work"<<std::endl;
   std::unique_lock<std::mutex> lock(workm);
@@ -83,6 +93,9 @@ void Spinner::waitForWork(){
           work->teptr = std::current_exception();                  
         }        
       }//while state==working
+      for (auto c:onHalt){
+        c();
+      }
       state=idle;
       cv.notify_all();
       //std::cout<<"now idle"<<std::endl;

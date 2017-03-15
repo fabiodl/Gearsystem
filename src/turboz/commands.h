@@ -9,8 +9,11 @@ enum Commands{
   cmRefreshState,
   cmOptionDialog,
   cmGoTo,
-  cmStep
+  cmStep,
+  cmRun,
+  cmHalt,
 };
+
 
 
 #endif

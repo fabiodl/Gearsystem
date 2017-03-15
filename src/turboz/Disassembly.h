@@ -42,8 +42,8 @@ public:
   uint8_t getData(uint16_t addr);
   Symbols& getSymbols(){return sym;}
   void setFormat(Format& format);
-private:
   int getInstructionLength(uint16_t addr);
+private:
     
   static const size_t MEMORYSIZE=64*1024;
   State state[MEMORYSIZE];

@@ -14,6 +14,7 @@
 #include "Placer.h"
 #include "commands.h"
 #include "GoToDialog.h"
+#include "rootView.h"
 
 class DisassemblyScroller:public TScroller{
 public:
@@ -28,13 +29,6 @@ private:
 
 
 
-TView* getRoot(TView* v){
-  while(v->owner!=NULL){
-    //std::cout<<"going to owner "<<v<<std::endl;
-    v=v->owner;
-  }
-  return v;
-}
 
 DisassemblyScroller:: DisassemblyScroller( const TRect& bounds, TScrollBar *aHScrollBar,TScrollBar *aVScrollBar ):
   TScroller( bounds, aHScrollBar, aVScrollBar )
@@ -250,7 +244,7 @@ void DisassemblyScroller::draw(){
       disassembly.disassembleWithSymbols(buffer+labelLength,BUFFERSIZE-labelLength,addr);
     }
     short color;
-    static TView* rootView=getRoot(this);
+    static TView* rootView=getRootView(this);
     //std::cout<<"addr is"<<std::hex<<addr<<" and PC is"<<
     //      static_cast<DisassemblyWindow*>(owner)->getPC()<<std::endl;
     if (static_cast<DisassemblyWindow*>(owner)->getPC()==addr){

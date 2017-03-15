@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <thread>
 #include <mutex>
+#include <vector>
 #include <condition_variable>
 class Spinner{
 
@@ -20,9 +21,11 @@ public:
   typedef std::function<bool()> HaltCondition;
   Spinner();
   ~Spinner();
+  void halt();
   void setWork(Work* work,const HaltCondition* haltCondition);
   bool isRunning();
   bool isIdle();
+  std::vector<std::function<void()> > onHalt;
 private:
   enum State{
     idle,workRequested,working,haltRequested,destroyRequested
