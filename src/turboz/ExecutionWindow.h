@@ -23,7 +23,7 @@ public:
     Spinner::HaltCondition check;
   };
   ExecutionWindow(const TRect& bounds,System& sys,TurboZ* turboz);
-
+  ~ExecutionWindow();
   void setHaltCondition(HaltCondition* haltCondition);
   void requestRun();
   void requestHalt();
@@ -36,13 +36,9 @@ private:
   TCheckBoxes* realtimeCheck;
   TInputLine* freqInputLine;
 
-  HaltCondition noRun,runFoverver,runOver;
-  class HaltInitCondition{
-  public:
-    uint16_t nextPC;
-  };
-  HaltCondition* haltCondition;
-  HaltInitCondition haltInitCond;
+  std::vector<HaltCondition*> haltConditions;
+  HaltCondition* haltCondition;//the current one
+
   TurboZ* turboz;
 };
 

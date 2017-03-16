@@ -18,10 +18,14 @@ public:
     Work():teptr(nullptr){
     }
   };
-  typedef std::function<bool()> HaltCondition;
+  class HaltCondition{
+  public:
+    std::function<bool()> preWork,postWork;
+  };    
   Spinner();
   ~Spinner();
-  void halt();
+  void blockingHalt();
+  void nonblockingHalt();
   void setWork(Work* work,const HaltCondition* haltCondition);
   bool isRunning();
   bool isIdle();

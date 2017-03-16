@@ -62,17 +62,18 @@ void ExecutionWindow::handleEvent( TEvent& event ){
       clearEvent(event);
       message( owner, evBroadcast, cmRefreshState, this );
       break;
-    case cmRun:
-      disableCommand(cmRun);
-      enableCommand(cmHalt);
+    case cmRun:   
       requestRun();
       clearEvent(event);
       break;
     case cmHalt:      
-      disableCommand(cmHalt);
       requestHalt();
-      enableCommand(cmRun);
       clearEvent(event);
+      break;
+    case cmReset:
+      sys.Reset();
+      clearEvent(event);
+      message( owner, evBroadcast, cmRefreshState, this );
       break;
     }
   }
@@ -87,7 +88,8 @@ void ExecutionWindow::handleEvent( TEvent& event ){
 
 ExecutionWindow::HaltCondition::HaltCondition(){
   init=[]{};
-  check=[]{return true;};
+  check.preWork=[]{return false;};
+  check.postWork=[]{return false;};
 }
 
 
@@ -95,29 +97,64 @@ void ExecutionWindow::setHaltCondition(ExecutionWindow::HaltCondition* hc){
   haltCondition=hc;
 }
 
+class OverCondition:public ExecutionWindow::HaltCondition{
+  uint16_t nextPC;
+public:
+  OverCondition(System& sys){
+    init=[this,&sys]{
+      uint16_t addr=sys.processor.GetPC();
+      nextPC=addr+sys.disassembly.getInstructionLength(addr);
+    };
+    check.preWork=[this,&sys]{
+      return sys.processor.GetPC()==nextPC;
+    };
+  }  
+};
+
+
+class OutCondition:public ExecutionWindow::HaltCondition{
+  uint16_t initsp;
+public:
+  OutCondition(Processor& p){
+    init=[this,&p]{
+      initsp=p.GetSP();      
+    };
+    check.preWork=[this,&p]{
+      return p.GetSP()>initsp;
+    };
+  }
+    
+};
+
+  class BreakCondition:public ExecutionWindow::HaltCondition{
+  public:
+    BreakCondition(System& sys){
+      check.preWork=[this,&sys]{
+        return sys.breakpoints.isBreakpoint(sys.processor.GetPC());
+      };
+    }
+  };
+
+  
+ExecutionWindow::~ExecutionWindow(){
+  for (auto h:haltConditions){
+    delete h;
+  }
+}
+
 ExecutionWindow::ExecutionWindow(const TRect& bounds,System& _sys,TurboZ* _turboz):
   TWindowInit( &TDialog::initFrame ),
   TDialog(bounds,"Execution"),
   sys(_sys),
+  haltCondition(nullptr),
   turboz(_turboz)
-  
 {
-  haltCondition=&noRun;
-  runFoverver.check=[]{return false;};
-  
-  auto captureNextPc=[this]{
-    //std::cout<<"initingCondition"<<std::endl;
-    uint16_t addr=sys.processor.GetPC();    
-    haltInitCond.nextPC=addr+sys.disassembly.getInstructionLength(addr);
-    //std::cout<<"target"<<haltInitCond.nextPC<<std::endl;
-  };
-  
-  runOver.init=captureNextPc;
-  runOver.check=[this]{
-    //std::cout<<"checking if pc=="<<haltInitCond.nextPC<<std::endl;
-    return sys.processor.GetPC()==haltInitCond.nextPC;
-  };
-  
+
+
+  auto add=[this](HaltCondition* h){
+    haltConditions.push_back(h);
+    return h;
+  };  
 
   
   Placer p(1,1);
@@ -132,13 +169,17 @@ ExecutionWindow::ExecutionWindow(const TRect& bounds,System& _sys,TurboZ* _turbo
   freqInputLine->setData(const_cast<char*>("NTSC"));
   //insert(new TStaticText(p.place(3,1),"Hz"));
   p.newLine(2);
-        
-  
-  insert( new TButton( p.place(8,2), "~S~tep", cmStep,bfDefault ));
-  insert( new TButton( p.place(8,2,true), "~H~alt", cmHalt,bfNormal ));
-  insert( new TCondButton( p.place(8,2), "~R~un", cmRun,bfNormal,this,&runFoverver));
-  insert( new TCondButton( p.place(8,2), "~O~ver", cmRun,bfNormal,this,&runOver));
-  
+
+  static const int BTNSIZE=9;
+
+  insert( new TButton( p.place(BTNSIZE,2), "~S~tep", cmStep,bfDefault ));
+  insert( new TButton( p.place(BTNSIZE,2,true), "~H~alt", cmHalt,bfNormal ));
+  insert( new TCondButton( p.place(BTNSIZE,2), "~R~un", cmRun,bfNormal,this,add(new HaltCondition())));
+  insert( new TCondButton( p.place(BTNSIZE,2,true), "O~v~er", cmRun,bfNormal,this,add(new OverCondition(sys))));
+  insert( new TCondButton( p.place(BTNSIZE,2), "O~u~t", cmRun,bfNormal,this,add(new OutCondition(sys.processor))));
+  insert( new TCondButton( p.place(BTNSIZE,2,true), "~B~reak", cmRun,bfNormal,this,add(new BreakCondition(sys))));
+
+  insert( new TButton( p.place(BTNSIZE,2), "Rese~t~", cmReset,bfNormal));
   
   
   fastWork.init=[this]{haltCondition->init();};

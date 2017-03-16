@@ -12,6 +12,7 @@ enum Commands{
   cmStep,
   cmRun,
   cmHalt,
+  cmReset
 };
 
 

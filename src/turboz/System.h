@@ -7,6 +7,7 @@
 #include "Cartridge.h"
 #include "DummyIOPorts.h"
 #include "Disassembly.h"
+#include "Breakpoints.h"
 
 class System{
 public:
@@ -19,6 +20,8 @@ public:
   Disassembly disassembly;  
   Symbols symbols;
   unsigned int Tick();
+  void Reset();
+  Breakpoints breakpoints;
 private:
   
 };

@@ -145,8 +145,8 @@ void DisassemblyScroller::handleEvent(TEvent& event){
       draw();
       break;
     }//switch
-  }//if evCommand
-
+  }//if evBroadcast
+ 
 
  TScroller::handleEvent(event);
 }
@@ -209,10 +209,36 @@ TPalette& DisassemblyScroller::getPalette() const{
 
 
 
+class LineColor{
+  palette::TurboZ colorByState[5];
+public:
+  LineColor(){
+    colorByState[Disassembly::Unknown]=palette::DEBUG;
+    colorByState[Disassembly::PredictedHead]=palette::DISASM_PREDICTED_HEAD;
+    colorByState[Disassembly::PredictedTail]=palette::DISASM_PREDICTED_TAIL;
+    colorByState[Disassembly::ConfirmedHead]=palette::DISASM_CONFIRMED_HEAD;
+    colorByState[Disassembly::ConfirmedTail]=palette::DISASM_CONFIRMED_TAIL;
+  }
 
+  palette::TurboZ getPaletteId(bool isPc,bool isBreakpoint,Disassembly::State state){
+    if (isPc&&isBreakpoint){
+      return palette::DISASM_PC_AT_BREAKPOINT;
+    }else if (isPc){
+      return palette::DISASM_CURRENT_PC_LINE;
+    }else if (isBreakpoint){
+      return palette::DISASM_BREAKPOINT;
+    }
+    return colorByState[state];        
+  }
+
+  
+};
+  
 void DisassemblyScroller::draw(){ 
   static const int BUFFERSIZE=256;
   static const int INFOLENGTH=8;
+  
+  static LineColor lineColor;
   char buffer[BUFFERSIZE];
   Disassembly& disassembly(static_cast<DisassemblyWindow*>(owner)->getDisassembly());
   Symbols& sym=disassembly.getSymbols();
@@ -247,27 +273,11 @@ void DisassemblyScroller::draw(){
     static TView* rootView=getRootView(this);
     //std::cout<<"addr is"<<std::hex<<addr<<" and PC is"<<
     //      static_cast<DisassemblyWindow*>(owner)->getPC()<<std::endl;
-    if (static_cast<DisassemblyWindow*>(owner)->getPC()==addr){
-      color=rootView->getColor(palette::DISASM_CURRENT_PC_LINE);
-    }else{   
-      switch(state){
-      case Disassembly::PredictedHead:
-        //std::cout<<"root view is"<<rootView<<std::endl;
-        color=rootView->getColor(palette::DISASM_PREDICTED_HEAD);
-        break;
-      case Disassembly::PredictedTail:
-        color=rootView->getColor(palette::DISASM_PREDICTED_TAIL);
-        break;
-      case Disassembly::ConfirmedHead:
-        color=rootView->getColor(palette::DISASM_CONFIRMED_HEAD);
-        break;
-      case Disassembly::ConfirmedTail:
-        color=rootView->getColor(palette::DISASM_CONFIRMED_TAIL);
-        break;
-      case Disassembly::Unknown:
-        color=rootView->getColor(palette::DEBUG);
-      }
-    }
+
+    bool isPC=static_cast<DisassemblyWindow*>(owner)->getPC()==addr;
+    bool isBreakpoint=static_cast<DisassemblyWindow*>(owner)->isBreakpoint(addr);
+
+    color=rootView->getColor(lineColor.getPaletteId(isPC,isBreakpoint,state));
     cs.set(buffer,-(labelMaxLength+INFOLENGTH-labelLength) +delta.x,size.x);    
     b.moveStr( cs.offset, cs.s, color );      
     writeLine( 0, i, size.x, 1, b);

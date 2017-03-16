@@ -16,6 +16,7 @@ public:
   void updatePosition(uint16_t addr);
   Disassembly& getDisassembly(){return sys.disassembly;}
   uint16_t getPC(){return sys.processor.GetPC();}
+  bool isBreakpoint(uint16_t addr){return sys.breakpoints.isBreakpoint(addr);}
   void handleEvent(TEvent& event);
   void scrollTo(uint16_t addr);
   void setState(ushort aState,Boolean enable);

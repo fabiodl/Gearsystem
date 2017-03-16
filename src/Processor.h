@@ -49,10 +49,12 @@ public:
   void RequestINT(bool assert);
   void RequestNMI();
   void SetIOPorts(IOPorts* pIOPorts);
-
     
   EightBitRegister* getRegister(Monitor::Register r);
-  u16 GetPC();
+  u16 GetPC() const;
+  u16 GetSP() const;
+  void SetPC(u16 addr);
+  
 private:
   friend class ProcessorSymbols;
     typedef void (Processor::*OPCptr) (void);

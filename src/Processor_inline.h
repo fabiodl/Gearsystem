@@ -26,8 +26,16 @@
 #include "IOPorts.h"
 
 
-inline u16 Processor::GetPC(){
+inline u16 Processor::GetPC() const {
   return PC.GetValue();
+}
+
+inline u16 Processor::GetSP() const{
+  return SP.GetValue();
+}
+
+inline void Processor::SetPC(u16 addr){
+  PC.SetValue(addr);
 }
 
 inline u8 Processor::FetchOPCode()

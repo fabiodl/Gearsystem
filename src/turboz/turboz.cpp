@@ -37,7 +37,7 @@ private:
 
 Placer winPlacer(0,0);
 template<> TRect WindowFactory<ProcessorWindow>::initPos(winPlacer.place(15,12,true));
-template<> TRect WindowFactory<ExecutionWindow>::initPos(winPlacer.spaceAndPlace(0,1,20,10));
+template<> TRect WindowFactory<ExecutionWindow>::initPos(winPlacer.spaceAndPlace(0,1,21,14));
 template<> TRect WindowFactory<DisassemblyWindow>::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,60,20),5,0) );
 
 
@@ -78,7 +78,7 @@ template<> ExecutionWindow* WindowFactory<ExecutionWindow>::getWindow(TurboZ* tu
 
 template<> DisassemblyWindow* WindowFactory<DisassemblyWindow>::getWindow(TurboZ* turboz){
   DisassemblyWindow* win=new DisassemblyWindow(getPos(),turboz->system);
-  if (ObjectTracker<DisassemblyWindow>::objs.size()==0){
+  if (ObjectTracker<DisassemblyWindow>::objs.size()==1){
     win->setFollowPC(true);
   }
   return win;
@@ -136,7 +136,9 @@ void loadPalette(TPalette& palette){
   palette[palette::DISASM_PREDICTED_TAIL]=background*palette::BACKGROUND+palette::BLUE;
   palette[palette::DISASM_CONFIRMED_HEAD]=background*palette::BACKGROUND+palette::WHITE;
   palette[palette::DISASM_CONFIRMED_TAIL]=background*palette::BACKGROUND+palette::GRAY;
-  palette[palette::DISASM_CURRENT_PC_LINE]=palette::RED*palette::BACKGROUND+palette::WHITE;
+  palette[palette::DISASM_CURRENT_PC_LINE]=palette::CYAN*palette::BACKGROUND+background;
+  palette[palette::DISASM_BREAKPOINT]=palette::RED*palette::BACKGROUND+palette::YELLOW;
+  palette[palette::DISASM_PC_AT_BREAKPOINT]=palette::MAGENTA*palette::BACKGROUND+background;
 }
 
 
@@ -264,6 +266,8 @@ void TurboZ::idle(){
 
   if(spinnerHalted.exchange(false)){
     enableCommand(cmRun);
+    enableCommand(cmStep);
+    enableCommand(cmReset);
     disableCommand(cmHalt);    
     refresh();    
   }
@@ -279,11 +283,16 @@ void TurboZ::idle(){
 }
 
 void TurboZ::requestRun(Spinner::Work* work,Spinner::HaltCondition* haltCondition){
+  disableCommand(cmRun);
+  disableCommand(cmStep);
+  disableCommand(cmReset);
+  enableCommand(cmHalt);
   spinner.setWork(work,haltCondition);
 }
 
 void TurboZ::requestHalt(){
-  spinner.halt();
+  disableCommand(cmHalt);
+  spinner.nonblockingHalt();
 }
 
 
