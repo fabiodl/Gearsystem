@@ -100,3 +100,9 @@ uint16_t Symbols::getAddress(const std::string& s){
   }
   throw std::invalid_argument(std::string("Symbol ")+s+" not found");
 }
+
+
+void Symbols::clear(){
+  maxLength=0;
+  sym.clear();
+}

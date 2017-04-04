@@ -5,14 +5,21 @@ enum Commands{
   cmTextEdited=200,
   cmShowProcessorWindow,  
   cmShowExecutionWindow,
+  cmShowSymbolWindow,
   cmAddDisassemblyWindow,
+  cmAddMemoryWindow,
   cmRefreshState,
+  cmRefreshSymbols,
   cmOptionDialog,
+  cmBreakpointDialog,
+  cmCycleFormat,
   cmGoTo,
   cmStep,
   cmRun,
   cmHalt,
-  cmReset
+  cmReset,
+  cmOpen,
+  cmReload
 };
 
 

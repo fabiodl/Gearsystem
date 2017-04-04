@@ -177,7 +177,7 @@ ExecutionWindow::ExecutionWindow(const TRect& bounds,System& _sys,TurboZ* _turbo
   insert( new TCondButton( p.place(BTNSIZE,2), "~R~un", cmRun,bfNormal,this,add(new HaltCondition())));
   insert( new TCondButton( p.place(BTNSIZE,2,true), "O~v~er", cmRun,bfNormal,this,add(new OverCondition(sys))));
   insert( new TCondButton( p.place(BTNSIZE,2), "O~u~t", cmRun,bfNormal,this,add(new OutCondition(sys.processor))));
-  insert( new TCondButton( p.place(BTNSIZE,2,true), "~B~reak", cmRun,bfNormal,this,add(new BreakCondition(sys))));
+  insert( new TCondButton( p.place(BTNSIZE,2,true), "Brea~k~", cmRun,bfNormal,this,add(new BreakCondition(sys))));
 
   insert( new TButton( p.place(BTNSIZE,2), "Rese~t~", cmReset,bfNormal));
   

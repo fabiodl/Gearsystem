@@ -117,9 +117,9 @@ void GoToDialog::updateChoices(const char* s){
   listBox->newList(list,false);
 }
  
-GoToDialog::GoToDialog(const TRect& pos,Symbols& _symbols,Processor& _processor):
+GoToDialog::GoToDialog(const TRect& pos,const char* title,Symbols& _symbols,Processor& _processor):
     TWindowInit( &TDialog::initFrame ),
-    TDialog( pos, "Go to" ),
+    TDialog( pos, title ),
     symbols(_symbols),
     processorSymbols(_processor)
   {

@@ -9,6 +9,8 @@ public:
   void remove(uint16_t);
   void toggle(uint16_t);
   bool isBreakpoint(uint16_t);
+  const std::set<uint16_t>& getBreakpoints();
+  void clear();
 private:
   std::set<uint16_t> breakpoints;
 

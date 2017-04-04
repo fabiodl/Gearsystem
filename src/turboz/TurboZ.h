@@ -8,7 +8,7 @@
 #include "Spinner.h"
 #include <stdint.h>
 #include <atomic>
-
+#include <libconfig.h++>
 
 
 class TurboZ : public TApplication
@@ -31,9 +31,15 @@ private:
   System& system;
   TPalette palette;
   Spinner spinner;
-  void refresh();
-  
+  void refreshState();
+  void refreshSymbols();
+  void openFile( const char *fileSpec);
+  void reload();
   std::atomic_bool spinnerHalted;
+  libconfig::Config cfg;
+  enum LogType{WARNING,OK};
+  void log(LogType,const std::string& s);
+  void setPalette();
 };
 
 #endif

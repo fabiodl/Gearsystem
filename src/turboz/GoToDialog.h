@@ -13,7 +13,7 @@ class TListBox;
 class TInputLine;
 class GoToDialog:public TDialog{
 public:  
-  GoToDialog(const TRect& pos,Symbols& symbols,Processor& processor);
+  GoToDialog(const TRect& pos,const char* title,Symbols& symbols,Processor& processor);
   void handleEvent(TEvent& event);
   virtual Boolean valid( ushort command );  
   uint16_t getChoice();//assumes valid returned true

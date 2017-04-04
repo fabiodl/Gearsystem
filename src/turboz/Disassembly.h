@@ -19,6 +19,7 @@ public:
     ConfirmedTail
   };    
 
+  void invalidateAll();
   void invalidate(uint16_t addr);
   void enter(uint16_t addr);
 

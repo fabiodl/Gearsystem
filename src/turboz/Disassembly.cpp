@@ -7,9 +7,7 @@ Disassembly::Disassembly(Memory* _memory,Symbols* _sym):
   memory(_memory),
   sym(*_sym)
 {
-  for (size_t i=0;i<MEMORYSIZE;i++){
-    state[i]=Unknown;
-  }
+  invalidateAll();
 }
 
 
@@ -32,6 +30,10 @@ void Disassembly::enter(uint16_t addr){
   for (int i=1;i<bytes;i++){
     state[addr+i]=ConfirmedTail;
   }                    
+}
+
+void Disassembly::invalidateAll(){
+  memset(state,Unknown,sizeof(state));
 }
 
 void Disassembly::invalidate(uint16_t addr){

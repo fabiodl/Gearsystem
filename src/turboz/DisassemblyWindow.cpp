@@ -1,10 +1,8 @@
 #include "DisassemblyWindow.h"
 #include "turbozPalette.h"
 #include "TDynamicScrollBar.h"
-#define Uses_TScrollBar
-#define Uses_TScroller
-#define Uses_TPalette
-#define Uses_TFrame
+
+
 #define Uses_TEvent
 #define Uses_TKeys
 #define Uses_TCheckBoxes
@@ -13,65 +11,38 @@
 #include <tv.h>
 #include "Placer.h"
 #include "commands.h"
-#include "GoToDialog.h"
+#include "BreakpointDialog.h"
 #include "rootView.h"
-
-class DisassemblyScroller:public TScroller{
-public:
-  DisassemblyScroller( const TRect& bounds, TScrollBar *aHScrollBar,TScrollBar *aVScrollBar );
-  virtual void draw();              
-  TPalette& getPalette() const;
-  void handleEvent(TEvent& event);
-private:
-  void showGoToDialog();
-  DisassemblyWindow* getWindow();
-};
+#include "ClippedString.h"
 
 
 
 
-DisassemblyScroller:: DisassemblyScroller( const TRect& bounds, TScrollBar *aHScrollBar,TScrollBar *aVScrollBar ):
-  TScroller( bounds, aHScrollBar, aVScrollBar )
-{
-    growMode = gfGrowHiX | gfGrowHiY;
-    options = options | ofFramed;
-    setLimit( 80,0x10000);
-}
 
-
-void DisassemblyWindow::updatePosition(uint16_t addr){
-  sprintf(const_cast<char*>(title)+strlen(title)-4,"%04X",addr);
-  frame->drawView();
-}
-
-/*void DisassemblyWindow::handleEvent(TEvent& event){
-  if (event.what==evBroadcast&&event.message.command==cmScrollBarChanged){
-    updateTitle(12);
-  }
-  TWindow::handleEvent(event); 
-  }*/
-
-
-void DisassemblyWindow::scrollTo(uint16_t addr){  
-  vScrollBar->setValue(addr);
-}
-
-
-void DisassemblyWindow::showGoToDialog(){
+void DisassemblyWindow::showBreakpointDialog(){
   
-  GoToDialog *pd = new GoToDialog(Placer::center(owner->getBounds(),24,11),
-                                  sys.symbols,
-                                  sys.processor
-                                  );
+  GoToDialog *pd = new BreakpointDialog
+    (
+     Placer::center(owner->getBounds(),40,11),
+     "Breakpoints",
+     sys.symbols,
+     sys.processor,
+     sys.breakpoints
+     );
   if( pd ){
     ushort control=static_cast<TGroup*>(owner)->execView( pd );
     if( control != cmCancel ){
-      scrollTo(pd->getChoice());
+      sys.breakpoints.toggle(pd->getChoice());
     }
     CLY_destroy( pd );
+    redraw();
   }
 
 }
+
+
+
+
 
 void DisassemblyWindow::showOptionsDialog(){
   TDialog* opt=new TDialog(Placer::center(owner->getBounds(),24,7),"Options");
@@ -97,115 +68,45 @@ void DisassemblyWindow::showOptionsDialog(){
   }
 }
 
-    void DisassemblyWindow::handleEvent(TEvent& event){
+void DisassemblyWindow::handleEvent(TEvent& event){
   if (event.what==evCommand){
-    switch(event.message.command){
-    case cmGoTo:
-      showGoToDialog();
-      clearEvent( event );
-      break;
+    switch(event.message.command){  
     case cmOptionDialog:
       showOptionsDialog();
       clearEvent(event);
+      break;
+    case cmBreakpointDialog:
+      showBreakpointDialog();
+      clearEvent(event);
+      break;
     }
   }
-  TWindow::handleEvent(event);  
-}
-
-void DisassemblyWindow::setState( ushort aState, Boolean enable){
-  if (aState&sfSelected){
-    if (enable){
-      enableCommand(cmGoTo);
-      enableCommand(cmOptionDialog);
-    }else{
-      disableCommand(cmGoTo);
-      enableCommand(cmOptionDialog);
-    }
-  }
-   
-  
-  TWindow::setState(aState,enable);
-}
-
-DisassemblyWindow* DisassemblyScroller::getWindow(){
-  return static_cast<DisassemblyWindow*>(owner);
-}
-
-void DisassemblyScroller::handleEvent(TEvent& event){
- if (event.what==evBroadcast){
+  if (event.what==evBroadcast){
     switch(event.message.command){
-    case cmScrollBarChanged:
-      getWindow()-> updatePosition(vScrollBar->value);
-      break;
     case cmRefreshState:
-      //std::cout<<"Disassembly window refresh"<<std::endl;
-      if (getWindow()->isFollowPC()){
-        getWindow()->scrollTo((std::max)(0,getWindow()->getPC()-size.y/2));
+      if (isFollowPC()){
+        scrollTo((std::max)(0,sys.processor.GetPC()-size.y/2));
       }
-      draw();
+      redraw();
       break;
-    }//switch
-  }//if evBroadcast
- 
-
- TScroller::handleEvent(event);
+    }
+  }
+  AddressableWindow::handleEvent(event);  //this handles the GoTo command
 }
- 
+
 
 DisassemblyWindow::DisassemblyWindow(const TRect& bounds,System& _sys):
    TWindowInit( &DisassemblyWindow::initFrame ),
-   TWindow( bounds,"Disasm 0000", 0),
-   sys(_sys),
+   AddressableWindow( bounds,"Disasm 0000",_sys),
    followPC(false)
-{
-   
-  TRect r = getExtent();
-  r = TRect( r.b.x-1, r.a.y+1, r.b.x, r.b.y-1 );
-  insert( vScrollBar = new TDynamicScrollBar(r) );
-  vScrollBar->options |= ofPostProcess;
-
-  TScrollBar *hScrollBar =
-     standardScrollBar( sbHorizontal |  sbHandleKeyboard );
-
-   r = getClipRect();    // get exposed view bounds
-   r.grow( -1, -1 );           // shrink to fit inside window frame
-   DisassemblyScroller* scroller=new DisassemblyScroller( r, hScrollBar, vScrollBar );
-   insert(scroller);
-}
-
-
-class ClippedString{
-public:
-  char* s;
-  int offset;
-  inline void set(char* s,int deltax,int sizex);  
-};
-
-
-
-
-void  ClippedString::set(char* buff,int deltax,int sizex){
-  int len=strlen(buff);
-
-  if (deltax>len || deltax+sizex < 0 ){
-    s=buff;
-    offset=0;
-    s[0]=0;
-  }else if (deltax>0){
-    s=buff+deltax;
-    offset=0;
-  }else{
-    s=buff;
-    offset=-deltax;
-  }
+{      
+   windowCommands.enableCmd(cmOptionDialog);
+   windowCommands.enableCmd(cmBreakpointDialog);   
 }
 
 
 
-TPalette& DisassemblyScroller::getPalette() const{
-  static TPalette passthrough(0,0);
-  return passthrough;
-}
+
 
 
 
@@ -234,16 +135,14 @@ public:
   
 };
   
-void DisassemblyScroller::draw(){ 
+void DisassemblyWindow::generateContent(TView& sink,TPoint& delta,TPoint& size){ 
   static const int BUFFERSIZE=256;
   static const int INFOLENGTH=8;
   
   static LineColor lineColor;
   char buffer[BUFFERSIZE];
-  Disassembly& disassembly(static_cast<DisassemblyWindow*>(owner)->getDisassembly());
-  Symbols& sym=disassembly.getSymbols();
   
-  int labelMaxLength=sym.getLabelMaxLength();
+  int labelMaxLength=sys.symbols.getLabelMaxLength();
   
   int labelLength;
   ClippedString cs;
@@ -252,7 +151,7 @@ void DisassemblyScroller::draw(){
     int addr = delta.y + i;       // delta is scroller offset          
     TDrawBuffer b;
     b.moveChar( 0, ' ', getColor(1), size.x );// fill line buffer with spaces
-    labelString=sym.getLabel(addr);
+    labelString=sys.symbols.getLabel(addr);
     if (labelString){
       labelLength=labelString->length();
       memcpy(buffer,labelString->c_str(),std::min(BUFFERSIZE,labelLength));
@@ -261,26 +160,26 @@ void DisassemblyScroller::draw(){
     }else{
       labelLength=0;
     }
-    sprintf(buffer+labelLength,"%04X %02X ",addr,disassembly.getData(addr));
+    sprintf(buffer+labelLength,"%04X %02X ",addr,sys.disassembly.getData(addr));
     labelLength+=INFOLENGTH;
     
       
-    Disassembly::State state=disassembly.getState(addr);
+    Disassembly::State state=sys.disassembly.getState(addr);
     if (state==Disassembly::ConfirmedHead||state==Disassembly::PredictedHead){
-      disassembly.disassembleWithSymbols(buffer+labelLength,BUFFERSIZE-labelLength,addr);
+      sys.disassembly.disassembleWithSymbols(buffer+labelLength,BUFFERSIZE-labelLength,addr);
     }
     short color;
     static TView* rootView=getRootView(this);
     //std::cout<<"addr is"<<std::hex<<addr<<" and PC is"<<
     //      static_cast<DisassemblyWindow*>(owner)->getPC()<<std::endl;
 
-    bool isPC=static_cast<DisassemblyWindow*>(owner)->getPC()==addr;
-    bool isBreakpoint=static_cast<DisassemblyWindow*>(owner)->isBreakpoint(addr);
+    bool isPC=sys.processor.GetPC()==addr;
+    bool isBreakpoint=sys.breakpoints.isBreakpoint(addr);
 
     color=rootView->getColor(lineColor.getPaletteId(isPC,isBreakpoint,state));
     cs.set(buffer,-(labelMaxLength+INFOLENGTH-labelLength) +delta.x,size.x);    
     b.moveStr( cs.offset, cs.s, color );      
-    writeLine( 0, i, size.x, 1, b);
+    sink.writeLine( 0, i, size.x, 1, b);
   }
 }
 

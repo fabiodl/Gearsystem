@@ -19,3 +19,11 @@ void Breakpoints::toggle(uint16_t addr){
     add(addr);
   }
 }
+
+const std::set<uint16_t>& Breakpoints::getBreakpoints(){
+  return breakpoints;
+}
+
+void Breakpoints::clear(){
+  breakpoints.clear();
+}

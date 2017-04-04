@@ -2,13 +2,13 @@ OD=build
 TOD=build/turboz
 GEAROBJS= $(OD)/Processor.o $(OD)/Memory.o  $(OD)/Cartridge.o $(OD)/MemoryRule.o  $(OD)/opcodes.o $(OD)/opcodes_cb.o $(OD)/opcodes_ed.o
 DISOBJS=  $(OD)/z80ex/z80ex_dasm.o
-TURBOOBJS= $(TOD)/FlexMemoryRule.o $(TOD)/Symbols.o $(TOD)/Disassembly.o $(TOD)/System.o $(TOD)/Placer.o $(TOD)/ProcessorWindow.o $(TOD)/Spinner.o $(TOD)/ExecutionWindow.o $(TOD)/TDynamicScrollBar.o $(TOD)/TDynamicInputLine.o $(TOD)/ProcessorSymbols.o $(TOD)/Breakpoints.o $(TOD)/GoToDialog.o $(TOD)/DisassemblyWindow.o $(TOD)/turboz.o
+TURBOOBJS= $(TOD)/FlexMemoryRule.o $(TOD)/Symbols.o $(TOD)/Disassembly.o $(TOD)/System.o $(TOD)/Placer.o $(TOD)/ProcessorWindow.o $(TOD)/Spinner.o $(TOD)/ExecutionWindow.o $(TOD)/TDynamicScrollBar.o $(TOD)/TDynamicInputLine.o $(TOD)/ProcessorSymbols.o $(TOD)/Breakpoints.o $(TOD)/GoToDialog.o $(TOD)/BreakpointDialog.o $(TOD)/AddressableWindow.o $(TOD)/DisassemblyWindow.o $(TOD)/MemoryWindow.o $(TOD)/TExistingFileDialog.o  $(TOD)/SymbolWindow.o $(TOD)/turboz.o
 
 
 OBJS= $(GEAROBJS) $(TURBOOBJS) $(DISOBJS)
 CFLAGS= -Wall -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I ../../../src -I ../../../src/z80ex/include
-LDFLAGS= -lrhtv -pthread
-CPPFLAGS= -std=c++11 
+LDFLAGS= -lrhtv -pthread `pkg-config --libs libconfig++`
+CPPFLAGS= -std=c++11 `pkg-config --cflags libconfig++`
 
 turboz: $(OBJS)
 	g++ -o ./turboz $(OBJS) $(LDFLAGS)

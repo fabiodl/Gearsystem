@@ -22,6 +22,7 @@ public:
   unsigned int Tick();
   void Reset();
   Breakpoints breakpoints;
+  void loadCartridge(const std::string& s);
 private:
   
 };
