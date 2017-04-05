@@ -2,54 +2,146 @@
 #include "commands.h"
 
 #define Uses_TEvent
-#define Used_TView
+#define Uses_TView
+#define Uses_TKeys
 #include <tv.h>
 #include <iostream>
 #include <sstream>
 
 class TLightInputLine:public TInputLine{
 public:
-  TLightInputLine( const TRect& bounds, int aMaxLen)
-    :TInputLine(bounds,aMaxLen){
+  TLightInputLine( const TRect& bounds, int aMaxLen);
+  void handleEvent( TEvent& event ); 
+  virtual void set(int v);
+  virtual int get();
+  void setOwner(ProcessorWindow::Register* _owner);
+protected:
+  std::string formatString;    
+  friend class TFlagInputLine;
+  ProcessorWindow::Register* owner;
+};
+
+class TFlagInputLine:public TLightInputLine{
+public:
+  TFlagInputLine( const TRect& bounds,TLightInputLine* numerical);
+  virtual void set(int v);
+  virtual int get();
+private:
+  std::string highformatString;
+  TLightInputLine* numerical;
+};
+
+
+TLightInputLine::TLightInputLine( const TRect& bounds, int aMaxLen)  
+    :TInputLine(bounds,aMaxLen),
+     owner(NULL)
+  {
     std::stringstream ss;    
     ss<<"%0"<<(aMaxLen-1)<<"X";
     formatString=ss.str();
+    //std::cout<<"new inputline at"<<this<<std::endl;
   }
 
-  ~TLightInputLine(){
 
-    //std::cout<<"TLightInputLine "<<this<<" destroyed"<<std::endl;
-  }
+void TLightInputLine::handleEvent( TEvent& event ){
+    if (state& sfSelected){
+      ushort key;
+      switch(event.what){
+      case  evKeyDown:
+        key = ctrlToArrow(event.keyDown.keyCode);
+        switch(key){
+        case kbEnter:
+        case kbTab:        
+          owner->toCpu(get());
+          owner->cpuToDisplay();
+          break;
+        case kbEsc:
+          owner->cpuToDisplay();
+          break;
+        }//switch key
+      }//switch event.what
+    }//switch state
+    TInputLine::handleEvent(event);
+}//handleEvent
 
-  
-  void update(uint16_t v){//assumes len(str)>=maxlen
+void TLightInputLine::set(int v){//assumes len(str)>=maxlen
     sprintf(data,formatString.c_str(),v);
     writeStr(1,0,data,1);
+}
 
+int TLightInputLine::get(){
+  int r=0;
+  sscanf(data,formatString.c_str(),&r);
+  return r;
+}
+
+TFlagInputLine::TFlagInputLine(const TRect& bounds,TLightInputLine* _numerical):  
+  TLightInputLine(bounds,9),
+  numerical(_numerical)
+{
+  formatString="szyhxpnc";
+  highformatString="SZYHXPNC";
+  setOwner(_numerical->owner);
+  set(0);
+}
+
+void TFlagInputLine::set(int v){
+  for (int i=0;i<8;i++){
+    data[i]=v&(1<<(7-i))?highformatString[i]:formatString[i];
+  }  
+  writeStr(1,0,data,1);
+  numerical->set(v);  
+}
+
+int TFlagInputLine::get(){
+  int v=0;
+  for (int i=0;i<8;i++){
+    if (data[i]==highformatString[i]){
+      v|=(1<<(7-i));
+    }
   }
-  
-private:
-  std::string formatString;    
-};
+  return v;
+}
 
+
+void TLightInputLine::setOwner(ProcessorWindow::Register* _owner){
+  owner=_owner;
+  //std::cout<<"setting owner of "<<this<<" to "<<owner<<std::endl;
+}
 
 
 ProcessorWindow::Register::Register(EightBitRegister* _h,EightBitRegister* _l,TLightInputLine* _input):
   l(_l),h(_h),input(_input)
-{  
+{
+  //std::cout<<"new register at "<<this<<"pointing to"<<h<<" "<<l<<",il "<<input<<std::endl;
 }
 
-void ProcessorWindow::Register::update(){
+void ProcessorWindow::Register::cpuToDisplay(){
   //std::cout<<"popping data from "<<input<<std::endl;
   if (h){
     uint16_t v=(static_cast<uint16_t>(h->GetValue())<<8)+l->GetValue();   
-    input->update(v);
+    input->set(v);
     //std::cout<<"v is"<<v<<std::endl;
   }else{
     uint8_t v=l->GetValue();
-    input->update(v);
+    input->set(v);
   }
 }
+
+void ProcessorWindow::Register::setOwnership(){
+  input->setOwner(this);
+}
+
+
+
+void ProcessorWindow::Register::toCpu(int v){
+  //std::cout<<"popping data from "<<input<<std::endl;
+  if (h){
+    h->SetValue((v>>8)%256);
+  }
+  l->SetValue(v%256);
+}
+
 
 
 
@@ -70,7 +162,7 @@ void ProcessorWindow::addRegister(Placer& placer,Monitor::Register h,Monitor::Re
      );
   insert(il);
   insert(new TLabel(labelbb,label,il));
-  registers.back().update();
+  registers.back().cpuToDisplay();
 }
 
 ProcessorWindow::ProcessorWindow(const TRect& bounds,Processor& _processor):
@@ -100,6 +192,12 @@ ProcessorWindow::ProcessorWindow(const TRect& bounds,Processor& _processor):
   p.newLine();
   addRegister(p,Monitor::PC_H,Monitor::PC_L,"PC");
   p.newLine();
+  for (auto&& r:registers){
+    r.setOwnership();
+  }
+  TFlagInputLine* fil=new TFlagInputLine(p.spaceAndPlace(1,1,10,1),registers[1].input);
+  registers[1].input=fil;
+  insert(fil);
   selectNext(false);
 }
 
@@ -119,7 +217,7 @@ void ProcessorWindow::handleEvent(TEvent& event){
 
 void ProcessorWindow::update(){
   for (auto  r=registers.begin();r!=registers.end();++r){
-    r->update();
+    r->cpuToDisplay();
   }       
 }
 

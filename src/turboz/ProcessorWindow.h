@@ -18,19 +18,22 @@ public:
   ProcessorWindow(const TRect& bounds,Processor& processor);
   void draw();
   void handleEvent(TEvent& event);
+ class Register{
+ public:
+    Register(EightBitRegister* l,EightBitRegister*h,TLightInputLine* input);
+    EightBitRegister* l,*h;
+   TLightInputLine* input;  
+    void cpuToDisplay();
+    void toCpu(int v);
+   void setOwnership();
+  };
 private:
   void update();
   Processor& processor;
 
   void addRegister(Placer& p,Monitor::Register h,Monitor::Register l,const char* label);
 
-  class Register{
-  public:
-    Register(EightBitRegister* l,EightBitRegister*h,TLightInputLine* input);
-    EightBitRegister* l,*h;
-    TLightInputLine* input;
-    void update();
-  };
+ 
   std::vector<Register> registers;
   static const Monitor::Register NOREGISTER=Monitor::REGISTERS;
 
