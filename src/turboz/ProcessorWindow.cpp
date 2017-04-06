@@ -82,6 +82,7 @@ TFlagInputLine::TFlagInputLine(const TRect& bounds,TLightInputLine* _numerical):
   formatString="szyhxpnc";
   highformatString="SZYHXPNC";
   setOwner(_numerical->owner);
+  data[8]=0;
   set(0);
 }
 

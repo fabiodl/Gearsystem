@@ -126,6 +126,7 @@ void metalPaletteCore(TPalette& palette,int background,int menuback,int buttonba
   palette[TDialog_FrameIcon]=palette[TWindowBlue_FrameIcon];
   palette[TDialog_ScrollBarPage]=palette[TWindowBlue_ScrollBarPage];
 
+  palette[TDialog_StaticText]=background*palette::BACKGROUND+palette::WHITE;
   palette[TDialog_LabelNormal]=background*palette::BACKGROUND+palette::WHITE;
   palette[TDialog_LabelHighlight]=background*palette::BACKGROUND+palette::CYAN+palette::LIGHT;
 
