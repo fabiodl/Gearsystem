@@ -1,7 +1,7 @@
 #include "FlexMemoryRule.h"
 #include "Memory.h"
 #include "Cartridge.h"
-
+#include "PhysicalIo.h"
 
 enum RamCfg{BANKSELECT,SLOT2RAM_EN,SLOT3RAM_EN};
 enum MapperTypes{SEGA,CODEMASTERS,KOREAN};      
@@ -100,20 +100,15 @@ void FlexMemoryRule::PerformWrite(u16 addr, u8 value){
   writeOuts(outs);
 }
 
-void FlexMemoryRule::Reset(){  
-  masterLock=false;
-}
-
-
-#ifdef __arm__
-
-
-#else
-bool FlexMemoryRule::getMiso(){
-  return false;
-}
-
 
 void FlexMemoryRule::writeOuts(uint8_t v){  
+  PhysicalIo::write(v);
 }
-#endif
+
+bool FlexMemoryRule::getMiso(){
+  return  PhysicalIo::read();
+}
+
+
+void FlexMemoryRule::Reset(){
+}
