@@ -6,10 +6,10 @@
 enum {MOSI,CLK,CS,ROMWR,OUT_PIN_N};
 
 static const uint8_t opins[OUT_PIN_N]={
-  7,8,9,10
+  SPI0_MOSI,SPI0_SCLK,SPI0_CE0_N,GPIO22
 };
 
-static const uint8_t ipin=11;
+static const uint8_t ipin=SPI0_MISO;
 
 class IoMap{
 public:
@@ -49,9 +49,8 @@ bool PhysicalIo::read(){
 
 #else
 
-PhysicalIo::PhysicalIo(){}
 void PhysicalIo::write(uint8_t v){}
-bool PhysicalIo::read(){}
+bool PhysicalIo::read(){return false;}
 
 
 #endif
