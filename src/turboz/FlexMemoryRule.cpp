@@ -12,7 +12,7 @@ inline uint8_t getSlot(uint16_t addr){
   return (addr&0xC000)>>14;
 }
 
-inline uint8_t lowAddr(uint16_t addr){
+inline uint16_t lowAddr(uint16_t addr){
   return addr& ((1<<14) -1);
 }
      
@@ -55,9 +55,11 @@ u8 FlexMemoryRule::PerformRead(u16 addr){
     return sRam[sram_haddr][lowAddr(addr)];
   }
   if (romEn){
-    //std::cout<<std::hex<<addr<<" rom"<<std::endl;
     auto size=m_pCartridge->GetROMSize();
     if (!size) return 0;    
+    //std::cout<<std::hex<<addr<<" rom addr"<<((lowAddr(addr)+(romAddr<<14))%size)<<std::endl;
+
+
     return m_pCartridge->GetROM()[(lowAddr(addr)+(romAddr<<14))%size];
   }
   //std::cout<<std::hex<<addr<<" ram"<<std::endl;
@@ -111,4 +113,8 @@ bool FlexMemoryRule::getMiso(){
 
 
 void FlexMemoryRule::Reset(){
+  for (int i=0;i<3;i++){
+    ffSlot[i]=i;
+  }
+  ffSlot[3]=0;
 }

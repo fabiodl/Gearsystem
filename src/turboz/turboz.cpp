@@ -372,6 +372,12 @@ void TurboZ::idle(){
     enableCommand(cmRun);
     enableCommand(cmStep);
     enableCommand(cmReset);
+    if (cfg.exists(CFG_LASTOPENED)){
+      enableCommand(cmReload);    
+    }else{
+      disableCommand(cmReload);
+    }
+
     disableCommand(cmHalt);    
     refreshState();    
   }
@@ -390,6 +396,7 @@ void TurboZ::requestRun(Spinner::Work* work,Spinner::HaltCondition* haltConditio
   disableCommand(cmRun);
   disableCommand(cmStep);
   disableCommand(cmReset);
+  disableCommand(cmReload);
   enableCommand(cmHalt);
   spinner.setWork(work,haltCondition);
 }
