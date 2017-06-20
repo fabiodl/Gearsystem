@@ -2,11 +2,9 @@
 #define _DISASSEMBLYWINDOW_H_
 
 
-
-
 #include "TrackedObject.h"
 #include "AddressableWindow.h"
-
+#include "System.h"
 
 class DisassemblyWindow: public AddressableWindow,public Tracked<DisassemblyWindow>{
 public:
@@ -21,6 +19,7 @@ private:
 
   bool isBreakpoint(uint16_t addr){return sys.breakpoints.isBreakpoint(addr);}
   bool followPC;
+  System& sys;
 };
 
 

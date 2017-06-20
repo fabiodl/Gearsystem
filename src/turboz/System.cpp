@@ -7,7 +7,8 @@
 System::System():
   rule(&memory,&cartridge),
   processor(&memory),
-  disassembly(&memory,&symbols)
+  disassembly(&memory,&symbols),
+  addrFind(symbols,processor)
 {
   //add exceptions when it returns false 
   //loadCartridge("/home/fabio/dev/s/workspace/mapper/mapper.sg");

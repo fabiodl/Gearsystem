@@ -49,10 +49,10 @@ void AddressScroller::draw(){
 
 
 
-AddressableWindow:: AddressableWindow(const TRect& bounds,const char* title,System& _sys):
+AddressableWindow:: AddressableWindow(const TRect& bounds,const char* title,AddressFinder& _addrFind):
   TWindowInit( &AddressableWindow::initFrame ),
   TWindow( bounds,title, 0),
-  sys(_sys)
+  addrFind(_addrFind)
 
 {
 
@@ -98,8 +98,7 @@ void AddressableWindow::showGoToDialog(){
   
   GoToDialog *pd = new GoToDialog(Placer::center(owner->getBounds(),24,11),
                                   "Go To",
-                                  sys.symbols,
-                                  sys.processor
+                                  addrFind
                                   );
   if( pd ){
     ushort control=static_cast<TGroup*>(owner)->execView( pd );

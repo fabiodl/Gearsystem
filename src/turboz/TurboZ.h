@@ -40,6 +40,10 @@ private:
   enum LogType{WARNING,OK};
   void log(LogType,const std::string& s);
   void setPalette();
+  void loadRam();
+  std::string getLastDirectory(const char* property);
+  void storeFilename(const char* property,const char* filename);
+
 };
 
 #endif

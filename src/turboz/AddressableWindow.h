@@ -6,12 +6,12 @@
 #define Uses_TCommandSet
 #define Uses_TScroller
 #include <tv.h>
-#include "System.h"
+#include "AddressFinder.h"
 #include "TDynamicScrollBar.h"
 
 class AddressableWindow:public TWindow{
 public:
-  AddressableWindow(const TRect& bounds,const char* title,System& sys);
+  AddressableWindow(const TRect& bounds,const char* title,AddressFinder& addrFind);
   virtual void updateTitle(uint16_t addr);
   void scrollTo(uint16_t addr);
   void setState(ushort aState,Boolean enable);
@@ -20,7 +20,7 @@ public:
   virtual void generateContent(TView& sink,TPoint& delta,TPoint& size)=0;
 protected:
   TCommandSet windowCommands;
-  System& sys;
+  AddressFinder& addrFind;
   virtual int addrToScroll(uint16_t addr);
   virtual uint16_t scrollToAddr(int scroll);
   TScroller* scroller;

@@ -26,8 +26,12 @@
 #include "TExistingFileDialog.h"
 #include "fileUtils.h"
 
+#include "LoadRamDialog.h"
+
+
 static const char* CFGFILENAME="turboz.cfg";
 static const char* CFG_LASTOPENED="lastopened";
+static const char* CFG_LASTRAMLOADOPENED="lastRamLoadOpened";
 static const char* CFG_PALETTE="palette";
 
 template<typename Window> class WindowFactory{
@@ -232,6 +236,37 @@ TurboZ::TurboZ(System& _system) :
   }
 }
 
+void TurboZ::loadRam(){
+
+  LoadRamDialog* d=(LoadRamDialog*) validView
+    (new LoadRamDialog(system.addrFind));
+  if (d){
+  
+    d->setDirectory(getLastDirectory(CFG_LASTRAMLOADOPENED).c_str());
+    if (deskTop->execView( d )!=cmCancel){
+      LoadRamDialog::TransferData td=d->getTransferData();
+      if (!td.size){
+        td.size=0xFFFF-td.dst;
+      }
+      std::cout<<"max load "<<td.size<<std::endl;
+      storeFilename(CFG_LASTRAMLOADOPENED,td.filename.c_str());
+      std::ifstream is(td.filename.c_str(),std::ifstream::binary);
+      is.seekg(td.src);
+      std::vector<char> buffer(td.size);
+      is.read(&buffer[0],td.size);
+      std::cout<<"actually read "<<is.gcount()<<std::endl;
+      for (int i=0;i<is.gcount();i++){
+        system.memory.Load(td.dst+i,buffer[i]);
+      }
+    }
+  }
+  
+      
+  CLY_destroy( d );
+
+}
+
+
 void TurboZ::handleEvent(TEvent& event){
   try{
     if (event.what==evCommand){
@@ -273,6 +308,9 @@ void TurboZ::handleEvent(TEvent& event){
         refreshState();
         refreshSymbols();
         break;
+      case cmLoadRam:
+        loadRam();
+        break;
       }
     }
     TApplication::handleEvent(event);
@@ -307,11 +345,17 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
      *new TMenuItem( "~R~eload", cmReload, kbF5, hcNoContext, "F5" )+
      newLine()+
      *new TMenuItem( "E~x~it", cmQuit, kbAltX, hcNoContext, "" )+
+     *new TSubMenu("Edit",kbNoKey)+
+     *new TMenuItem("Load RAM",cmLoadRam,kbNoKey,hcNoContext,"")+
+
      *new TSubMenu( "~V~iew", kbAltW )+
      *new TMenuItem( "~C~pu", cmShowProcessorWindow,  kbAltC, hcNoContext, "" )+
      *new TMenuItem( "~D~isassembly", cmAddDisassemblyWindow,  kbAltD, hcNoContext, "" )+
      *new TMenuItem( "~M~em", cmAddMemoryWindow,  kbAltM, hcNoContext, "" )+
      *new TMenuItem( "~E~xecution", cmShowExecutionWindow,  kbAltE, hcNoContext, "" )
+
+
+     
 
      );
 }
@@ -408,42 +452,23 @@ void TurboZ::requestHalt(){
 
 
 void TurboZ::openFile( const char *fileSpec)
-{
-
-  std::string directory;
-  if (cfg.exists(CFG_LASTOPENED)){
-    std::string lastOpened;
-    cfg.lookupValue(CFG_LASTOPENED,lastOpened);
-    size_t lastSlash=lastOpened.find_last_of("/");
-    if (lastSlash!=std::string::npos){
-      directory=lastOpened.substr(0,lastSlash+1);
-    }    
-  }
-
-  
+{  
   TExistingFileDialog *d= (TExistingFileDialog *)validView
   (
    new TExistingFileDialog(fileSpec, "Select ROM", "~N~ame", fdOpenButton, 100 )
    );
-  d->setDirectory(directory.c_str());
-  if( d != 0 && deskTop->execView( d ) != cmCancel )
-    {
+
+  if (d){
+    d->setDirectory(getLastDirectory(CFG_LASTOPENED).c_str());
+    if(deskTop->execView( d ) != cmCancel ){
       char fileName[PATH_MAX];
       d->getFileName( fileName );
-      libconfig::Setting& root=cfg.getRoot();
-      if (!cfg.exists(CFG_LASTOPENED)){
-        root.add(CFG_LASTOPENED,libconfig::Setting::TypeString);
-      }
-      root[CFG_LASTOPENED]=fileName;
+      storeFilename(CFG_LASTOPENED,fileName);
       enableCommand(cmReload);    
-      try{
-        cfg.writeFile(CFGFILENAME);
-      }catch(const libconfig::FileIOException &fioex){
-        log(WARNING,std::string("Cannot write to ")+CFGFILENAME);
-      }
       system.loadCartridge(fileName);
       system.breakpoints.clear();
     }
+  }
   CLY_destroy(d);
 }
 
@@ -474,6 +499,32 @@ void TurboZ::reload(){
 
 void TurboZ::log(TurboZ::LogType,const std::string& ){
   //add to a log window...
+}
+
+std::string TurboZ::getLastDirectory(const char* property){
+  std::string directory;
+  if (cfg.exists(property)){
+    std::string lastOpened;
+    cfg.lookupValue(property,lastOpened);
+    size_t lastSlash=lastOpened.find_last_of("/");
+    if (lastSlash!=std::string::npos){
+      directory=lastOpened.substr(0,lastSlash+1);
+    }    
+  }
+  return directory;
+}
+
+void  TurboZ::storeFilename(const char* property,const char* filename){
+  libconfig::Setting& root=cfg.getRoot();
+  if (!cfg.exists(property)){
+    root.add(property,libconfig::Setting::TypeString);
+  }
+  root[property]=filename;
+  try{
+    cfg.writeFile(CFGFILENAME);
+  }catch(const libconfig::FileIOException &fioex){
+    log(WARNING,std::string("Cannot write to ")+CFGFILENAME);
+  }    
 }
 
 

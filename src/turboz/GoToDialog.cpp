@@ -38,20 +38,8 @@ class TSearchResults : public TCollection
 
 };
 
-static const int32_t INVALIDHEX=-1;
 
 
-int32_t GoToDialog::getHex(){
-  const char* s=getInputLine();
-  if (s[0]==0) return INVALIDHEX;
-  char* end;
-  long int res=strtol(s,&end,16);
-  if (*end==0){
-    return res;
-  }else{
-    return INVALIDHEX;
-  }
-}
 
 
 const char* GoToDialog::getInputLine(){
@@ -63,23 +51,13 @@ const char* GoToDialog::getInputLine(){
    case cmCancel:
      return true;
    default:
-     return list->size()>0||getHex()!=INVALIDHEX||processorSymbols.isSymbol(getInputLine());
-   
+     return list->size()>0||(addrFind.getAddressExtended(getInputLine())!=AddressFinder::INVALIDADDR);   
    }//switch
 }
 
 uint16_t GoToDialog::getChoice(){ 
-  int32_t hex;
-  if (list->size()>0){
-    hex=symbols.getAddress((*list)[listBox->focused]);
-  }else{
-    hex=processorSymbols.getValueExtended(getInputLine());
-    if (hex==-1){
-      hex=getHex();
-    }
-  }
-
-  return static_cast<uint16_t>(hex); 
+  const char* name=list->size()>0?(*list)[listBox->focused]:getInputLine();
+  return static_cast<uint16_t>(addrFind.getAddressExtended(name)); 
 }
 
 void GoToDialog::handleEvent(TEvent& event){
@@ -113,15 +91,14 @@ void GoToDialog::updateChoices(const char* s){
  
 
   list->clear();
-  symbols.getSubstringMatches(s,addChoiceCb,list);
+  addrFind.syms.getSubstringMatches(s,addChoiceCb,list);
   listBox->newList(list,false);
 }
  
-GoToDialog::GoToDialog(const TRect& pos,const char* title,Symbols& _symbols,Processor& _processor):
+GoToDialog::GoToDialog(const TRect& pos,const char* title,AddressFinder& _addrFind):
     TWindowInit( &TDialog::initFrame ),
     TDialog( pos, title ),
-    symbols(_symbols),
-    processorSymbols(_processor)
+    addrFind(_addrFind)
   {
     Placer placer(2,1);
     inputLine=new TDynamicInputLine(placer.place(20,1,true),256);

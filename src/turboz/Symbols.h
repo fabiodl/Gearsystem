@@ -19,6 +19,7 @@ public:
   void getSubstringMatches(const char* s,void (*cb)(const char*,void*),void* userData=NULL);
   bool isAvailable(const std::string& s);
   uint16_t getAddress(const std::string& s);
+  uint32_t getAddressExtended(const std::string& s);
   void clear();
   const std::map<uint16_t,std::string>& getSymbols(){return sym;};  
 private:

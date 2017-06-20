@@ -8,6 +8,7 @@
 #include "DummyIOPorts.h"
 #include "Disassembly.h"
 #include "Breakpoints.h"
+#include "AddressFinder.h"
 
 class System{
 public:
@@ -19,6 +20,7 @@ public:
   Processor processor;
   Disassembly disassembly;  
   Symbols symbols;
+  AddressFinder addrFind;
   unsigned int Tick();
   void Reset();
   Breakpoints breakpoints;

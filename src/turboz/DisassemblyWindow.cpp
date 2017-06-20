@@ -25,8 +25,7 @@ void DisassemblyWindow::showBreakpointDialog(){
     (
      Placer::center(owner->getBounds(),40,11),
      "Breakpoints",
-     sys.symbols,
-     sys.processor,
+     sys.addrFind,
      sys.breakpoints
      );
   if( pd ){
@@ -97,8 +96,9 @@ void DisassemblyWindow::handleEvent(TEvent& event){
 
 DisassemblyWindow::DisassemblyWindow(const TRect& bounds,System& _sys):
    TWindowInit( &DisassemblyWindow::initFrame ),
-   AddressableWindow( bounds,"Disasm 0000",_sys),
-   followPC(false)
+   AddressableWindow( bounds,"Disasm 0000",_sys.addrFind),
+   followPC(false),
+   sys(_sys)
 {      
    windowCommands.enableCmd(cmOptionDialog);
    windowCommands.enableCmd(cmBreakpointDialog);   

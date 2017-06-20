@@ -10,9 +10,9 @@
 
 
 
-BreakpointDialog::BreakpointDialog(const TRect& pos,const char* title,Symbols& symbols,Processor& processor,Breakpoints& bp):
+BreakpointDialog::BreakpointDialog(const TRect& pos,const char* title,AddressFinder& addrFind,Breakpoints& bp):
   TWindowInit( &TDialog::initFrame ),
-  GoToDialog(pos,title,symbols,processor)
+  GoToDialog(pos,title,addrFind)
 {
   Placer placer(23,1);
   TRect listRect(placer.place(14,6));
@@ -24,7 +24,7 @@ BreakpointDialog::BreakpointDialog(const TRect& pos,const char* title,Symbols& s
   auto list = new TStringCollection(0,1);
   for (auto addr:bp.getBreakpoints()){
     std::string label;    
-    std::string* isLabel=symbols.getLabel(addr);
+    std::string* isLabel=addrFind.syms.getLabel(addr);
     if (isLabel){
       label=*isLabel;
       if (label.length()>100){

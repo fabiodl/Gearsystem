@@ -5,7 +5,7 @@
 
 class BreakpointDialog:public GoToDialog{
 public:
-  BreakpointDialog(const TRect& pos,const char* title,Symbols& symbols,Processor& processor,Breakpoints& bp);
+  BreakpointDialog(const TRect& pos,const char* title,AddressFinder& addrFind,Breakpoints& bp);
   
 };
 

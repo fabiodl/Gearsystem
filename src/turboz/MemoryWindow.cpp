@@ -7,10 +7,11 @@
 #include "ClippedString.h"
 #include "commands.h"
 
-MemoryWindow::MemoryWindow(const TRect& bounds,System& sys):
+MemoryWindow::MemoryWindow(const TRect& bounds,System& _sys):
   TWindowInit( &MemoryWindow::initFrame ),
-  AddressableWindow(bounds,"Memory000x",sys),
-  format(Hex)
+  AddressableWindow(bounds,"Memory000x",_sys.addrFind),
+  format(Hex),
+  sys(_sys)
 {
   scroller->setLimit(80,0x10000/16+1);
   windowCommands.enableCmd(cmCycleFormat);

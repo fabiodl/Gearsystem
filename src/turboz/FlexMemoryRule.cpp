@@ -88,8 +88,8 @@ void FlexMemoryRule::PerformWrite(u16 addr, u8 value){
       ffRam[i]=value&(1<<(i+2));
     }
   }
-
-  if (sramEn){
+  bool sram_wr_en=! (!masterLock && setSlot[2]);
+  if (sramEn&&sram_wr_en){
     sRam[sram_haddr][lowAddr(addr)]=value;
   }else if(!romEn){
     m_pMemory->Load(addr,value);

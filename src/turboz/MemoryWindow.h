@@ -1,6 +1,7 @@
 
 #include "AddressableWindow.h"
 #include "TrackedObject.h"
+#include "System.h"
 
 class MemoryWindow:public AddressableWindow,public Tracked<MemoryWindow>{
 public:
@@ -14,4 +15,5 @@ private:
   enum Format{Hex,Dec,Ascii,FORMATS};
   Format format;
   void handleEvent(TEvent& event);
+  System& sys;
 };

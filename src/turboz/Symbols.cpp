@@ -3,7 +3,7 @@
 #include "Symbols.h"
 #include "cistring.h"
 #include <stdexcept>
-
+#include "AddressFinder.h"
 
 Symbols::Symbols():
   maxLength(0){
@@ -100,6 +100,20 @@ uint16_t Symbols::getAddress(const std::string& s){
   }
   throw std::invalid_argument(std::string("Symbol ")+s+" not found");
 }
+
+
+uint32_t Symbols::getAddressExtended(const std::string& s){
+  for (std::map<uint16_t,std::string>::iterator it=sym.begin();
+       it!=sym.end();++it){
+    if (it->second==s){
+      return it->first;
+    }
+  }
+  return  AddressFinder::INVALIDADDR;
+}
+
+
+
 
 
 void Symbols::clear(){
