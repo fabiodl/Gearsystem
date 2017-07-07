@@ -248,16 +248,17 @@ void TurboZ::loadRam(){
       if (!td.size){
         td.size=0xFFFF-td.dst;
       }
-      std::cout<<"max load "<<td.size<<std::endl;
+      //std::cout<<"max load "<<td.size<<std::endl;
       storeFilename(CFG_LASTRAMLOADOPENED,td.filename.c_str());
       std::ifstream is(td.filename.c_str(),std::ifstream::binary);
       is.seekg(td.src);
       std::vector<char> buffer(td.size);
       is.read(&buffer[0],td.size);
-      std::cout<<"actually read "<<is.gcount()<<std::endl;
+      //std::cout<<"actually read "<<is.gcount()<<std::endl;
       for (int i=0;i<is.gcount();i++){
         system.memory.Load(td.dst+i,buffer[i]);
       }
+      refreshState();
     }
   }
   

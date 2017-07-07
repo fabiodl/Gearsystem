@@ -45,7 +45,7 @@ LoadRamDialog::LoadRamDialog(AddressFinder& _addrFind):
     insert(new TLabel(labelRect,labels[i],il));
     p.newLine();      
   }
-  DialogData dd("0000","C000","0");
+  DialogData dd("0000","C000","200");
   TDialog::setData(&dd); 
   p.newLine();
   selectNext(false);  
@@ -77,10 +77,12 @@ LoadRamDialog::TransferData LoadRamDialog::getTransferData(){
   DialogData dd;
   TDialog::getData(&dd);
   TransferData td;
-  td.filename=dd.filename;
+  char fileName[PATH_MAX];
+  getFileName( fileName );
+  td.filename=fileName;
   td.size=AddressFinder::getHex(dd.size);
   td.src=addrFind.getAddressExtended(dd.src);
   td.dst=addrFind.getAddressExtended(dd.dst);
-  std::cout<<"now tradata is "<<td<<std::endl;
+  //std::cout<<"now tradata is "<<td<<std::endl;
   return td;
 }

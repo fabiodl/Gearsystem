@@ -365,12 +365,12 @@ bool GearsystemCore::AddMemoryRules()
     if (m_pCartridge->IsGameGear())
     {
         Log("Game Gear Mode enabled");
-        m_pProcessor->SetIOPOrts(m_pGameGearIOPorts);
+        m_pProcessor->SetIOPorts(m_pGameGearIOPorts);
     }
     else
     {
         Log("Master System Mode enabled");
-        m_pProcessor->SetIOPOrts(m_pSmsIOPorts);
+        m_pProcessor->SetIOPorts(m_pSmsIOPorts);
     }
 
     return !notSupported;

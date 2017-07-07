@@ -81,16 +81,17 @@ Disassembly::Info Disassembly::disassembleWithSymbols(char* dis, int disMaxLengt
 
   int len=strlen(dis);
   std::string* label=nullptr;
-  if (dis[len-5]=='#'){
-    dis[len-5]=format.immediate;    
-    label=sym.getLabel(strtol(dis+len-4, NULL, 16));
-  }else if (dis[len-8]=='#'){
-    dis[len-8]=format.immediate;    
-    label=sym.getLabel(strtol(dis+len-7, NULL, 16));
+
+  for (int i=0;i<len;i++){
+    if (dis[i]=='#'){
+      dis[i]=format.immediate;
+      label=sym.getLabel(strtol(dis+i+1,NULL,16));
+    }
   }
+
   
   if (label){
-    dis[len]=' ';
+    dis[len]=';';
     dis=dis+len+1;
     disMaxLength-=(len+1);
     int toCopy=std::min(disMaxLength-1,static_cast<int>((label->length())));      

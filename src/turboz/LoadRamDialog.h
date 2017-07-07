@@ -19,7 +19,7 @@ public:
   TransferData getTransferData();
   void setDirectory(const char* dir);
 private:
-  static const int ENTRYLENGTH=6;
+  static const int ENTRYLENGTH=10;
   struct DialogData{
     char filename[PATH_MAX];
     char src[ENTRYLENGTH];

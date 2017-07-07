@@ -99,14 +99,24 @@ void ExecutionWindow::setHaltCondition(ExecutionWindow::HaltCondition* hc){
 
 class OverCondition:public ExecutionWindow::HaltCondition{
   uint16_t nextPC;
+  bool isJump;
 public:
   OverCondition(System& sys){
     init=[this,&sys]{
       uint16_t addr=sys.processor.GetPC();
       nextPC=addr+sys.disassembly.getInstructionLength(addr);
+      char buffer[64];
+      sys.disassembly.disassemble(buffer,64,addr);
+      buffer[3]=0;
+      isJump=strcmp(buffer,"RET")==0;
+      buffer[2]=0;
+      isJump=isJump||(strcmp(buffer,"JR")==0)||(strcmp(buffer,"JP")==0);
     };
     check.preWork=[this,&sys]{
       return sys.processor.GetPC()==nextPC;
+    };
+    check.postWork=[this]{
+      return isJump;
     };
   }  
 };
