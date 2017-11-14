@@ -1,4 +1,3 @@
-
 #ifndef _PHYSICALIO_H_
 #define _PHYSICALIO_H_
 
@@ -6,6 +5,8 @@
 
 class PhysicalIo{
  public:
+  PhysicalIo();
+  ~PhysicalIo();
   static bool read();
   static void write(uint8_t);
 };

@@ -66,11 +66,6 @@ volatile unsigned *gpio;
 #define PAGE_SIZE (4*1024)
 #define BLOCK_SIZE (4*1024)
 
-int  mem_fd;
-void *gpio_map;
-
-// I/O access
-volatile unsigned *gpio;
 
 
 //

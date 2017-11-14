@@ -1,5 +1,5 @@
 #include "PhysicalIo.h"
-
+#include <cstdio>
 #ifdef __arm__
 #include "piIo.h"
 
@@ -11,6 +11,8 @@ static const uint8_t opins[OUT_PIN_N]={
 
 static const uint8_t ipin=SPI0_MISO;
 
+//this maps an uint8_t to a uint32_t to with the bits shuffled according to opins through a lookup table
+
 class IoMap{
 public:
   IoMap();
@@ -20,8 +22,6 @@ public:
 
 
 IoMap::IoMap(){
-  io_setup();
-
   mask=0;
   for (int b=0;b<OUT_PIN_N;b++){
     mask|=(1<<opins[b]);
@@ -37,6 +37,23 @@ IoMap::IoMap(){
 }
 
 static IoMap ioMap;
+
+
+PhysicalIo::PhysicalIo(){
+  io_setup();
+  io_pin_setDirIn(ipin);
+  for (size_t i=0;i<OUT_PIN_N;i++){
+    io_pin_setDirOut(opins[i]);
+  }
+}
+
+
+PhysicalIo::~PhysicalIo(){
+  for (size_t i=0;i<OUT_PIN_N;i++){
+    io_pin_setDirIn(opins[i]);
+  }
+}
+
 
 void PhysicalIo::write(uint8_t v){
   io_bus_setVal(ioMap.mask,ioMap.outs[v]);
