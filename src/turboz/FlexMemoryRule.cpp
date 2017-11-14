@@ -44,14 +44,15 @@ FlexMemoryRule::FlexMemoryRule(Memory* pMemory, Cartridge* pCartridge):
 }
 
 void FlexMemoryRule::expandAddress(uint16_t addr){
-  sram_haddr=(ffRam[BANKSELECT] && (getSlot(addr)==SLOT2)) || (!masterLock && getMiso());
+  sram_haddr=(getSlot(addr)==SLOT2) && (ffRam[BANKSELECT] || (!masterLock && getMiso()) );
   readLogic(sramEn,romEn,romAddr,addr,ffSlot,ffRam);
 }
 
 u8 FlexMemoryRule::PerformRead(u16 addr){
   expandAddress(addr);
   if (sramEn){
-    //std::cout<<std::hex<<addr<<" sram"<<std::endl;
+    //if (!lowAddr(addr))
+    //std::cout<<"reading "<<addr<<" sram["<<sram_haddr<<"]["<<lowAddr(addr)<<"]"<<std::endl;
     return sRam[sram_haddr][lowAddr(addr)];
   }
   if (romEn){
@@ -88,10 +89,11 @@ void FlexMemoryRule::PerformWrite(u16 addr, u8 value){
       ffRam[i]=value&(1<<(i+2));
     }
   }
-  bool sram_wr_en=! (!masterLock && setSlot[2]);
+  bool sram_wr_en=! (!masterLock && mt==CODEMASTERS);
   if (sramEn&&sram_wr_en){
+    //std::cout<<"writing "<<addr<<" sram["<<sram_haddr<<"]["<<lowAddr(addr)<<"]="<<value<<std::endl;
     sRam[sram_haddr][lowAddr(addr)]=value;
-  }else if(!romEn){
+  }else if(!(romEn||sramEn) ){
     m_pMemory->Load(addr,value);
   }
   uint8_t outs=ffSlot[2]&0x0F;

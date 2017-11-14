@@ -20,7 +20,9 @@ enum Commands{
   cmReset,
   cmOpen,
   cmReload,
-  cmLoadRam
+  cmLoadRam,
+  cmResetRam,
+  cmResetDisasm
 };
 
 

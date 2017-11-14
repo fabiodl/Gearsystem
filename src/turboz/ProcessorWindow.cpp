@@ -1,5 +1,6 @@
 #include "ProcessorWindow.h"
 #include "commands.h"
+#include "rootView.h"
 
 #define Uses_TEvent
 #define Uses_TView
@@ -7,6 +8,7 @@
 #include <tv.h>
 #include <iostream>
 #include <sstream>
+
 
 class TLightInputLine:public TInputLine{
 public:
@@ -54,6 +56,8 @@ void TLightInputLine::handleEvent( TEvent& event ){
         case kbTab:        
           owner->toCpu(get());
           owner->cpuToDisplay();
+          //std::cout<<"messaging"<<std::endl;
+          message(getRootView(this),evBroadcast,cmRefreshState,NULL);
           break;
         case kbEsc:
           owner->cpuToDisplay();

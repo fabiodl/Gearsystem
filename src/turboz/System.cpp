@@ -36,9 +36,7 @@ void System::loadCartridge(const std::string& s){
       //std::cout<<"No symbol file"<<symName<<std::endl;
     }
   }
-  memory.Init();
-
-  
+  //memory.Init();  
 }
 
 

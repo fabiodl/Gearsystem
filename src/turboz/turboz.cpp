@@ -312,6 +312,15 @@ void TurboZ::handleEvent(TEvent& event){
       case cmLoadRam:
         loadRam();
         break;
+      case cmResetRam:
+        system.memory.Init();
+        refreshState();
+        break;
+      case cmResetDisasm:
+        system.disassembly.invalidateAll();
+        refreshState();
+        break;
+        
       }
     }
     TApplication::handleEvent(event);
@@ -346,9 +355,13 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
      *new TMenuItem( "~R~eload", cmReload, kbF5, hcNoContext, "F5" )+
      newLine()+
      *new TMenuItem( "E~x~it", cmQuit, kbAltX, hcNoContext, "" )+
-     *new TSubMenu("Edit",kbNoKey)+
-     *new TMenuItem("Load RAM",cmLoadRam,kbNoKey,hcNoContext,"")+
+     *new TSubMenu("RAM",kbNoKey)+
+     *new TMenuItem("Load",cmLoadRam,kbNoKey,hcNoContext,"")+
+     *new TMenuItem("Reset",cmResetRam,kbNoKey,hcNoContext,"")+
 
+     *new TSubMenu("Disasm",kbNoKey)+
+     *new TMenuItem("Reset",cmResetDisasm,kbNoKey,hcNoContext,"")+
+     
      *new TSubMenu( "~V~iew", kbAltW )+
      *new TMenuItem( "~C~pu", cmShowProcessorWindow,  kbAltC, hcNoContext, "" )+
      *new TMenuItem( "~D~isassembly", cmAddDisassemblyWindow,  kbAltD, hcNoContext, "" )+
@@ -467,6 +480,7 @@ void TurboZ::openFile( const char *fileSpec)
       storeFilename(CFG_LASTOPENED,fileName);
       enableCommand(cmReload);    
       system.loadCartridge(fileName);
+      system.memory.Init();
       system.breakpoints.clear();
     }
   }
