@@ -137,11 +137,23 @@ public:
 };
 
   class BreakCondition:public ExecutionWindow::HaltCondition{
+    bool startsLocked;
+    inline bool isLocked(System& sys){
+      return sys.breakpoints.isBreakpoint(sys.processor.GetPC());
+    }
+      
+
   public:
     BreakCondition(System& sys){
-      check.preWork=[this,&sys]{
-        return sys.breakpoints.isBreakpoint(sys.processor.GetPC());
+      init=[this,&sys]{
+        startsLocked= isLocked(sys);
       };
+      check.preWork=[this,&sys]{
+        bool rv=!startsLocked&&isLocked(sys);
+        startsLocked=false;
+        return rv;
+      };
+      
     }
   };
 
