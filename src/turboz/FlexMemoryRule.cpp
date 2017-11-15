@@ -119,4 +119,10 @@ void FlexMemoryRule::Reset(){
     ffSlot[i]=i;
   }
   ffSlot[3]=0;
+  for (int i=0;i<3;i++){
+    ffRam[i]=false;
+  }    
+  mt=0;
+  masterLock=false;
+  memset(sRam,0,2*16*1024);
 }

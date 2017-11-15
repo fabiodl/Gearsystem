@@ -56,8 +56,11 @@ const char* GoToDialog::getInputLine(){
 }
 
 uint16_t GoToDialog::getChoice(){ 
-  const char* name=list->size()>0?(*list)[listBox->focused]:getInputLine();
-  return static_cast<uint16_t>(addrFind.getAddressExtended(name)); 
+  uint32_t addr= addrFind.getAddressExtended(getInputLine());
+  if (addr==AddressFinder::INVALIDADDR){
+    addr=addrFind.getAddressExtended((*list)[listBox->focused]);
+  }
+  return static_cast<uint16_t>(addr); 
 }
 
 void GoToDialog::handleEvent(TEvent& event){
@@ -121,3 +124,6 @@ GoToDialog::GoToDialog(const TRect& pos,const char* title,AddressFinder& _addrFi
 
   }
 
+GoToDialog::~GoToDialog(){
+  delete list;
+}

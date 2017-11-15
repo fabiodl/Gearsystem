@@ -14,7 +14,7 @@ public:
 private:
   uint8_t ffSlot[3];
   bool ffRam[3];
-  uint8_t flex;
+  //  uint8_t flex;
   uint8_t mt;
   bool masterLock;
   

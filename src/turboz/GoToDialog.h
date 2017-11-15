@@ -13,6 +13,7 @@ class TInputLine;
 class GoToDialog:public TDialog{
 public:  
   GoToDialog(const TRect& pos,const char* title,AddressFinder& addrFind);
+  ~GoToDialog();
   void handleEvent(TEvent& event);
   virtual Boolean valid( ushort command );  
   uint16_t getChoice();//assumes valid returned true

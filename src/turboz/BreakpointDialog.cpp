@@ -12,7 +12,8 @@
 
 BreakpointDialog::BreakpointDialog(const TRect& pos,const char* title,AddressFinder& addrFind,Breakpoints& bp):
   TWindowInit( &TDialog::initFrame ),
-  GoToDialog(pos,title,addrFind)
+  GoToDialog(pos,title,addrFind),
+  existingBpList(0,1)
 {
   Placer placer(23,1);
   TRect listRect(placer.place(14,6));
@@ -21,7 +22,7 @@ BreakpointDialog::BreakpointDialog(const TRect& pos,const char* title,AddressFin
   insert(scrollb);
   TListBox* listBox=new TListBox(listRect,1,scrollb);
   listBox->setState(sfDisabled,true);
-  auto list = new TStringCollection(0,1);
+  //auto list = new TStringCollection(0,1);
   for (auto addr:bp.getBreakpoints()){
     std::string label;    
     std::string* isLabel=addrFind.syms.getLabel(addr);
@@ -33,11 +34,17 @@ BreakpointDialog::BreakpointDialog(const TRect& pos,const char* title,AddressFin
     }
     char* buffer=new char[256];
     sprintf(buffer,"%04X %s",addr,label.c_str());
-    list->insert(buffer);
+    existingBpList.insert(buffer);
   }
 
-  listBox->newList(list);
+ 
+  listBox->newList(&existingBpList);
   insert(listBox);
   selectNext(false);
 
+}
+
+
+BreakpointDialog::~BreakpointDialog(){
+  existingBpList.shutDown();
 }

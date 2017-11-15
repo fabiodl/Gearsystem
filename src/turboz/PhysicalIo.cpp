@@ -65,9 +65,11 @@ bool PhysicalIo::read(){
 
 
 #else
+//__arm__ not defined
+#include <cstdlib>
 
 void PhysicalIo::write(uint8_t v){}
-bool PhysicalIo::read(){return false;}
+bool PhysicalIo::read(){return rand()%2==0;}
 
 
 #endif
