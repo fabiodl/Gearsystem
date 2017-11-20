@@ -227,7 +227,7 @@ TurboZ::TurboZ(System& _system) :
   
   disableCommand(cmHalt);
   spinner.onHalt.push_back([this]{
-      spinnerHalted=true;      
+      spinnerHalted=true;
     });
   if (cfg.exists(CFG_LASTOPENED)){
     enableCommand(cmReload);    
@@ -320,6 +320,10 @@ void TurboZ::handleEvent(TEvent& event){
         system.disassembly.invalidateAll();
         refreshState();
         break;
+      case cmResetCartridge:
+        system.rule.Reset();
+        refreshState();
+        break;
         
       }
     }
@@ -361,6 +365,9 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
 
      *new TSubMenu("Disasm",kbNoKey)+
      *new TMenuItem("Reset",cmResetDisasm,kbNoKey,hcNoContext,"")+
+
+     *new TSubMenu("Cartridge",kbNoKey)+
+     *new TMenuItem("Reset",cmResetCartridge,kbNoKey,hcNoContext,"")+
      
      *new TSubMenu( "~V~iew", kbAltW )+
      *new TMenuItem( "~C~pu", cmShowProcessorWindow,  kbAltC, hcNoContext, "" )+

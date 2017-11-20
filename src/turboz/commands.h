@@ -22,7 +22,8 @@ enum Commands{
   cmReload,
   cmLoadRam,
   cmResetRam,
-  cmResetDisasm
+  cmResetDisasm,
+  cmResetCartridge
 };
 
 

@@ -1,4 +1,5 @@
 #include "ExecutionWindow.h"
+#include "HardwareCondition.h"
 #include "Placer.h"
 #include "commands.h"
 
@@ -157,7 +158,8 @@ public:
     }
   };
 
-  
+
+
 ExecutionWindow::~ExecutionWindow(){
   for (auto h:haltConditions){
     delete h;
@@ -200,7 +202,8 @@ ExecutionWindow::ExecutionWindow(const TRect& bounds,System& _sys,TurboZ* _turbo
   insert( new TCondButton( p.place(BTNSIZE,2,true), "O~v~er", cmRun,bfNormal,this,add(new OverCondition(sys))));
   insert( new TCondButton( p.place(BTNSIZE,2), "O~u~t", cmRun,bfNormal,this,add(new OutCondition(sys.processor))));
   insert( new TCondButton( p.place(BTNSIZE,2,true), "Brea~k~", cmRun,bfNormal,this,add(new BreakCondition(sys))));
-
+  insert( new TCondButton( p.place(BTNSIZE,2), "Har~d~", cmRun,bfNormal,this,add(new HardwareCondition(sys))));
+  
   insert( new TButton( p.place(BTNSIZE,2), "Rese~t~", cmReset,bfNormal));
   
   

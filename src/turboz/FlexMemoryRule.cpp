@@ -2,6 +2,10 @@
 #include "Memory.h"
 #include "Cartridge.h"
 #include "PhysicalIo.h"
+#include <sstream>
+#include "HardwareCondition.h"
+
+static const uint16_t MASTER_ADDR=0xA000;
 
 enum RamCfg{BANKSELECT,SLOT2RAM_EN,SLOT3RAM_EN};
 enum MapperTypes{SEGA,CODEMASTERS,KOREAN};      
@@ -48,39 +52,62 @@ void FlexMemoryRule::expandAddress(uint16_t addr){
   readLogic(sramEn,romEn,romAddr,addr,ffSlot,ffRam);
 }
 
+std::string FlexMemoryRule::describe(){
+  std::lock_guard<std::mutex> lock(access);
+  std::stringstream ss;
+  ss<<std::hex;
+  for (int i=0;i<3;i++){
+    ss<<"ffSlot["<<i<<"]="<<(int)ffSlot[i]<<std::endl;
+  }
+  for (int i=0;i<3;i++){
+    ss<<"ffRam["<<i<<"]="<<ffRam[i]<<std::endl;
+  }
+  ss<<"mt="<<(int)mt<<std::endl;
+  ss<<"masterLock="<<masterLock<<std::endl;
+  ss<<"sramEn="<<sramEn<<" romEn="<<romEn<<" highRom="<<highRom<<" sram_haddr="<<sram_haddr<<std::endl;
+  ss<<"romAddr="<<(int)romAddr<<std::endl;
+  return ss.str();
+}
+
 u8 FlexMemoryRule::PerformRead(u16 addr){
-  expandAddress(addr);
-  if (sramEn){
-    //if (!lowAddr(addr))
-    //std::cout<<"reading "<<addr<<" sram["<<sram_haddr<<"]["<<lowAddr(addr)<<"]"<<std::endl;
-    return sRam[sram_haddr][lowAddr(addr)];
-  }
-  if (romEn){
-    auto size=m_pCartridge->GetROMSize();
-    if (!size) return 0;    
-    //std::cout<<std::hex<<addr<<" rom addr"<<((lowAddr(addr)+(romAddr<<14))%size)<<std::endl;
-
-
-    return m_pCartridge->GetROM()[(lowAddr(addr)+(romAddr<<14))%size];
-  }
-  //std::cout<<std::hex<<addr<<" ram"<<std::endl;
-  return m_pMemory->Retrieve(addr);
-  
+    std::lock_guard<std::mutex> lock(access);
+    expandAddress(addr);
+    if (sramEn){
+      //if (!lowAddr(addr))
+      //std::cout<<"reading "<<addr<<" sram["<<sram_haddr<<"]["<<lowAddr(addr)<<"]"<<std::endl;
+      return sRam[sram_haddr][lowAddr(addr)];
+    }
+    if (romEn){
+      auto size=m_pCartridge->GetROMSize();
+      if (!size) return 0;    
+      //std::cout<<std::hex<<addr<<" rom addr"<<((lowAddr(addr)+(romAddr<<14))%size)<<std::endl;
+      
+      
+      return m_pCartridge->GetROM()[(lowAddr(addr)+(romAddr<<14))%size];
+    }
+    //std::cout<<std::hex<<addr<<" ram"<<std::endl;
+    return m_pMemory->Retrieve(addr);
+    
 }
 
 void FlexMemoryRule::PerformWrite(u16 addr, u8 value){
+  std::lock_guard<std::mutex> lock(access);
   expandAddress(addr);
-  bool masterWrite=addr==0x0000 && !masterLock;
+  bool masterWrite=addr==MASTER_ADDR && !masterLock;
 
   if (masterWrite){
     masterLock=value&0x01;
     mt=(value>>1)&0x03;
+    std::cout<<"mt="<<(int)mt<<std::endl;
+    if (mt==2){
+      std::cout<<"wrote masterValue"<<(int)value<<std::endl;
+    }
     highRom=(value>>3)&0x01;
   }
   bool setSlot[4];
   writeLogic(setSlot,mt,addr);
   for (int i=0;i<3;i++){
-    if (setSlot[i]){
+    if (setSlot[i]){     
       ffSlot[i]=value;
     }    
   }

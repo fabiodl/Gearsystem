@@ -2,6 +2,7 @@
 #define	_FLEXMEMORYRULE_H_
 
 #include "MemoryRule.h"
+#include <mutex>
 
 class FlexMemoryRule : public MemoryRule
 {
@@ -10,7 +11,8 @@ public:
   virtual u8 PerformRead(u16 address);
   virtual void PerformWrite(u16 address, u8 value);
   virtual void Reset();
-
+  uint8_t getMt(){return mt;}
+  std::string describe();
 private:
   uint8_t ffSlot[3];
   bool ffRam[3];
@@ -27,6 +29,7 @@ private:
   uint8_t romAddr;
   bool highRom;
   bool sram_haddr;
+  std::mutex access;
 };
 
 #endif

@@ -170,8 +170,6 @@ void DisassemblyWindow::generateContent(TView& sink,TPoint& delta,TPoint& size){
     }
     short color;
     static TView* rootView=getRootView(this);
-    //std::cout<<"addr is"<<std::hex<<addr<<" and PC is"<<
-    //      static_cast<DisassemblyWindow*>(owner)->getPC()<<std::endl;
 
     bool isPC=sys.processor.GetPC()==addr;
     bool isBreakpoint=sys.breakpoints.isBreakpoint(addr);
