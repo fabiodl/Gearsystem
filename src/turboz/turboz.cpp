@@ -32,6 +32,7 @@
 static const char* CFGFILENAME="turboz.cfg";
 static const char* CFG_LASTOPENED="lastopened";
 static const char* CFG_LASTRAMLOADOPENED="lastRamLoadOpened";
+static const char* CFG_LASTRAMSAVEOPENED="lastRamSaveOpened";
 static const char* CFG_PALETTE="palette";
 
 template<typename Window> class WindowFactory{
@@ -239,7 +240,7 @@ TurboZ::TurboZ(System& _system) :
 void TurboZ::loadRam(){
 
   LoadRamDialog* d=(LoadRamDialog*) validView
-    (new LoadRamDialog(system.addrFind));
+    (new LoadRamDialog(system.addrFind,"Load RAM"));
   if (d){
   
     d->setDirectory(getLastDirectory(CFG_LASTRAMLOADOPENED).c_str());
@@ -259,6 +260,37 @@ void TurboZ::loadRam(){
         system.memory.Load(td.dst+i,buffer[i]);
       }
       refreshState();
+    }
+  }
+  
+      
+  CLY_destroy( d );
+
+}
+
+
+
+void TurboZ::saveRam(){
+
+  LoadRamDialog* d=(LoadRamDialog*) validView
+    (new LoadRamDialog(system.addrFind,"Save RAM"));
+  if (d){
+  
+    d->setDirectory(getLastDirectory(CFG_LASTRAMSAVEOPENED).c_str());
+    if (deskTop->execView( d )!=cmCancel){
+      LoadRamDialog::TransferData td=d->getTransferData();
+      if (!td.size){
+        td.size=0xFFFF-td.dst;
+      }
+      //std::cout<<"max load "<<td.size<<std::endl;
+      storeFilename(CFG_LASTRAMSAVEOPENED,td.filename.c_str());
+      std::ofstream os(td.filename.c_str(),std::ios::binary|std::ios::out);      
+      os.seekp(td.dst);
+      std::vector<uint8_t> buffer(td.size);
+      for (size_t i=0;i<td.size;i++){
+        buffer[i]=system.memory.Retrieve(td.src+i);
+      }
+      os.write(reinterpret_cast<char*>(&buffer[0]),td.size);
     }
   }
   

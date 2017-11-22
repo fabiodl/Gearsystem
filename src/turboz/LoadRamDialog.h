@@ -7,7 +7,7 @@
 
 class LoadRamDialog:public TExistingFileDialog{
 public:
-  LoadRamDialog(AddressFinder& addrFind);
+  LoadRamDialog(AddressFinder& addrFind,const std::string& title);
   virtual Boolean valid( ushort command );
   struct TransferData{
     std::string filename;

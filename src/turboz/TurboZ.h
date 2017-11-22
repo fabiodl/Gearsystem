@@ -41,6 +41,7 @@ private:
   void log(LogType,const std::string& s);
   void setPalette();
   void loadRam();
+  void saveRam();
   std::string getLastDirectory(const char* property);
   void storeFilename(const char* property,const char* filename);
 

@@ -98,10 +98,6 @@ void FlexMemoryRule::PerformWrite(u16 addr, u8 value){
   if (masterWrite){
     masterLock=value&0x01;
     mt=(value>>1)&0x03;
-    std::cout<<"mt="<<(int)mt<<std::endl;
-    if (mt==2){
-      std::cout<<"wrote masterValue"<<(int)value<<std::endl;
-    }
     highRom=(value>>3)&0x01;
   }
   bool setSlot[4];

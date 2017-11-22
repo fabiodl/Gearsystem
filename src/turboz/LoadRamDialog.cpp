@@ -25,9 +25,9 @@ LoadRamDialog::DialogData::DialogData(const char* _src,const char* _dst,const ch
 }
 
 
-LoadRamDialog::LoadRamDialog(AddressFinder& _addrFind):
+LoadRamDialog::LoadRamDialog(AddressFinder& _addrFind,const std::string& title):
   TWindowInit( &TFileDialog::initFrame ),
-  TExistingFileDialog("*", "Load RAM", "~N~ame", fdOpenButton, 100 ),
+  TExistingFileDialog("*", title.c_str(), "~N~ame", fdOpenButton, 100 ),
   addrFind(_addrFind)
 {  
   Placer p(35,6);
