@@ -36,16 +36,10 @@ IoMap::IoMap(){
   }
 }
 
+static IoMap ioMap;
 
 
-class InitedIo{
-public:
-  InitedIo();
-  ~InitedIo();
-};
-
-
-InitedIo::InitedIo(){
+PhysicalIo::PhysicalIo(){
   io_setup();
   io_pin_setDirIn(ipin);
   for (size_t i=0;i<OUT_PIN_N;i++){
@@ -54,14 +48,12 @@ InitedIo::InitedIo(){
 }
 
 
-InitedIo::~InitedIo(){
+PhysicalIo::~PhysicalIo(){
   for (size_t i=0;i<OUT_PIN_N;i++){
     io_pin_setDirIn(opins[i]);
   }
 }
 
-static InitedIo initedIo;
-static IoMap ioMap;
 
 void PhysicalIo::write(uint8_t v){
   io_bus_setVal(ioMap.mask,ioMap.outs[v]);
