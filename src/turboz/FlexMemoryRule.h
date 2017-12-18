@@ -1,5 +1,12 @@
+#define MANUAL_FLEXMEMORYRULE
+
+#ifdef MANUAL_FLEXMEMORYRULE
+#include "Manual_FlexMemoryRule.h"
+#else
+
 #ifndef _FLEXMEMORYRULE_H_
 #define	_FLEXMEMORYRULE_H_
+
 
 #include "MemoryRule.h"
 #include <mutex>
@@ -16,6 +23,8 @@ private:
   uint8_t sRam[2][16*1024]; 
   std::mutex access;
 };
+
+#endif
 
 #endif
 

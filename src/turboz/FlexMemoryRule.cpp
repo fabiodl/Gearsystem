@@ -1,4 +1,9 @@
 #include "FlexMemoryRule.h"
+
+#ifdef MANUAL_FLEXMEMORYRULE
+#include "Manual_FlexMemoryRule.cpp"
+#else
+
 #include <mapper/obj_dir/Vmapper.h>
 #include "PhysicalIo.h"
 #include "Cartridge.h"
@@ -81,3 +86,6 @@ void FlexMemoryRule::Reset(){
   m.eval();
   m.reset=1;
 }
+
+
+#endif

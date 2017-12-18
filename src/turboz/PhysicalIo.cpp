@@ -1,9 +1,11 @@
 #include "PhysicalIo.h"
 #include <cstdio>
+
+enum {MOSI,CLK,CS,ROMWR,OUT_PIN_N};
+
 #ifdef __arm__
 #include "piIo.h"
 
-enum {MOSI,CLK,CS,ROMWR,OUT_PIN_N};
 
 static const uint8_t opins[OUT_PIN_N]={
   SPI0_MOSI,SPI0_SCLK,SPI0_CE0_N,GPIO22
@@ -37,7 +39,7 @@ IoMap::IoMap(){
 }
 
 static IoMap ioMap;
-
+static PhysicalIo physicalIo;
 
 PhysicalIo::PhysicalIo(){
   io_setup();
@@ -68,8 +70,26 @@ bool PhysicalIo::read(){
 //__arm__ not defined
 #include <cstdlib>
 
-void PhysicalIo::write(uint8_t v){}
-bool PhysicalIo::read(){return rand()%2==0;}
+
+#include "sdCard.h"
+
+
+class Initer{
+public:
+  Initer(){
+    sdCard.loadFile("sdimage.img");
+  }
+  SDCard sdCard;
+};
+
+static Initer inited;
+
+void PhysicalIo::write(uint8_t v){
+  inited.sdCard.eval(v&(1<<MOSI),v&(1<<CLK),v&(1<<CS));
+}
+bool PhysicalIo::read(){
+  return inited.sdCard.getMiso();
+}
 
 
 #endif

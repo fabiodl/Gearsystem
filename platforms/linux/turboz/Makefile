@@ -5,12 +5,12 @@ MAPPER=mapper
 GEAROBJS= $(OD)/Processor.o $(OD)/Memory.o  $(OD)/Cartridge.o $(OD)/MemoryRule.o  $(OD)/opcodes.o $(OD)/opcodes_cb.o $(OD)/opcodes_ed.o
 DISOBJS=  $(OD)/z80ex/z80ex_dasm.o
 TURBOOBJS= $(TOD)/FlexMemoryRule.o $(TOD)/PhysicalIo.o $(TOD)/Symbols.o $(TOD)/Disassembly.o $(TOD)/System.o $(TOD)/Placer.o $(TOD)/ProcessorWindow.o $(TOD)/Spinner.o $(TOD)/ExecutionWindow.o $(TOD)/HardwareCondition.o $(TOD)/TDynamicScrollBar.o $(TOD)/TDynamicInputLine.o $(TOD)/ProcessorSymbols.o $(TOD)/AddressFinder.o $(TOD)/Breakpoints.o $(TOD)/GoToDialog.o $(TOD)/BreakpointDialog.o $(TOD)/AddressableWindow.o $(TOD)/DisassemblyWindow.o $(TOD)/MemoryWindow.o $(TOD)/TExistingFileDialog.o  $(TOD)/SymbolWindow.o $(TOD)/LoadRamDialog.o $(TOD)/turboz.o
-MAPPEROBJS = $(MAPPER)/obj_dir/Vmapper.o $(MAPPER)/obj_dir/Vmapper__Syms.o
+MAPPEROBJS = $(MAPPER)/obj_dir/Vmapper.o $(MAPPER)/obj_dir/Vmapper__Syms.o $(TOD)/sdCard.o
 
 OBJS= $(GEAROBJS) $(TURBOOBJS) $(DISOBJS) $(MAPPEROBJS)
-CFLAGS= -Wall -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I ../../../src -I ../../../src/z80ex/include -I ../../../src/piIo/ -I . -I/usr/share/verilator/include
+CFLAGS= -Wall -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I ../../../src -I ../../../src/z80ex/include -I ../../../src/piIo/ 
 LDFLAGS= -lrhtv -pthread `pkg-config --libs libconfig++` /usr/share/verilator/include/verilated.cpp
-CPPFLAGS= -std=c++11 `pkg-config --cflags libconfig++`
+CPPFLAGS= -std=c++11 `pkg-config --cflags libconfig++` -I . -I/usr/share/verilator/include
 
 
 ifneq ("$(wildcard $(PATH_TO_FILE))","/opt/vc/include/bcm_host.h")
