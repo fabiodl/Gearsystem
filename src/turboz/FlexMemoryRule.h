@@ -1,4 +1,4 @@
-#define MANUAL_FLEXMEMORYRULE
+//#define MANUAL_FLEXMEMORYRULE
 
 #ifdef MANUAL_FLEXMEMORYRULE
 #include "Manual_FlexMemoryRule.h"

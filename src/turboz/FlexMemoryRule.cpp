@@ -34,19 +34,25 @@ u8 FlexMemoryRule::PerformRead(u16 address){
   uint16_t lowAddr=address&((1<<14)-1);
   bool isBank3=0xC000<=address && address<=0XFFFF;
   m.eval();
+  //  std::cout<<std::hex<<address<<std::dec<<" ramCe"<<(bool)m.ramCe<<"romCe"<<(bool)m.romCe<<"isBank3"<<isBank3<<std::endl;
+
   if (!m.ramCe && !m.romCe){
     std::cerr<<"SRAM-ROM CONFLICT!"<<std::endl;
   }
   if (!m.ramCe && !m.killmem && isBank3){
     std::cerr<<"SRAM-RAM CONFLICT!"<<std::endl;
   }
-  if (m.ramCe){ //assume rd
+  if (!m.ramCe){ //assume rd
     return sRam[m.ram_haddr][lowAddr];
-  }else if (m.romCe){
-    if (!m_pCartridge->GetROMSize()) return 0;
+  }else if (!m.romCe){
+    if (!m_pCartridge->GetROMSize()){
+      //std::cout<<"Empty cartridge"<<std::endl;
+      return 0;
+    }
     int idx=(m.rom_uhaddr<<(14+6))+
       (m.rom_haddr<<14)+
       lowAddr;
+    //std::cout<<"rom addr"<<idx<<std::endl;
     return m_pCartridge->GetROM()[idx%m_pCartridge->GetROMSize()];
   }else if (isBank3){
     return m_pMemory->Retrieve(address);
@@ -66,6 +72,7 @@ void FlexMemoryRule::PerformWrite(u16 address, u8 value){
     m.eval();
     uint16_t lowAddr=address&((1<<14)-1);
     bool isBank3=0xC000<=address && address<=0XFFFF;
+    //std::cout<<"write "<<std::hex<<address<<std::dec<<" ramCe"<<(bool)m.ramCe<<"romCe"<<(bool)m.romCe<<"isBank3"<<isBank3<<"killMem"<<(bool)m.killmem<<std::endl;
     if (!m.ramCe && !m.ramWr){
       sRam[m.ram_haddr][lowAddr]=value;
     }
