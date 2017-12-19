@@ -92,7 +92,7 @@ void io_setup()
   close(mem_fd); //No need to keep mem_fd open after mmap
 
   if (gpio_map == MAP_FAILED) {
-    printf("mmap error %d\n", (int)gpio_map);//errno also set!
+    printf("mmap error %d\n", (int)(intptr_t)gpio_map);//errno also set!
     exit(-1);
   }
 
