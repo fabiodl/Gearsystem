@@ -42,6 +42,9 @@ $(OD)/piIo.o: ../../../src/piIo/piIo.c
 	gcc -MM $(CFLAGS) $< -MF $(@:.o=.d) -MT $@ -I ../../../src/piIo
 
 
+$(MAPPER)/obj_dir/Vmapper.h: $(MAPPER)/*.v 
+	cd mapper;verilator --cc mapper.v
+
 $(MAPPER)/obj_dir/Vmapper.cpp: $(MAPPER)/*.v 
 	cd mapper;verilator --cc mapper.v
 
