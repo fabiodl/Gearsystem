@@ -20,7 +20,7 @@ endif
 
 
 
-turboz: $(OBJS)
+turboz: $(MAPPER)/obj_dir/Vmapper.h $(OBJS)
 	g++ -o ./turboz $(OBJS) $(LDFLAGS)
 
 
@@ -49,4 +49,4 @@ $(MAPPER)/obj_dir/Vmapper.cpp: $(MAPPER)/*.v
 	cd mapper;verilator --cc mapper.v
 
 clean:
-	rm $(OBJS) ./turboz
+	rm $(OBJS) $(MAPPER)/obj_dir/Vmapper.h $(MAPPER)/obj_dir/Vmapper.cpp ./turboz
