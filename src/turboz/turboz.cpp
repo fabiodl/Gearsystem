@@ -28,12 +28,15 @@
 
 #include "LoadRamDialog.h"
 
+#include <csignal>
 
 static const char* CFGFILENAME="turboz.cfg";
 static const char* CFG_LASTOPENED="lastopened";
 static const char* CFG_LASTRAMLOADOPENED="lastRamLoadOpened";
 static const char* CFG_LASTRAMSAVEOPENED="lastRamSaveOpened";
+static const char* CFG_LASTBREAKPOINTS="breakpoints";
 static const char* CFG_PALETTE="palette";
+
 
 template<typename Window> class WindowFactory{
 public:
@@ -171,7 +174,7 @@ void TurboZ::setPalette(){
   
   if (!cfg.exists(CFG_PALETTE)){
     cfg.getRoot().add(CFG_PALETTE,libconfig::Setting::TypeString)="metal";
-    cfg.writeFile(CFGFILENAME);
+    storeConfig();
   }
   
   std::string paletteId=cfg.getRoot()[CFG_PALETTE];
@@ -356,6 +359,14 @@ void TurboZ::handleEvent(TEvent& event){
         system.rule.Reset();
         refreshState();
         break;
+      case cmBreakpointsClear:
+	system.breakpoints.clear();
+	refreshState();
+	break;
+      case cmBreakpointsReload:
+	loadBreakpoints();
+	refreshState();
+	break;
         
       }
     }
@@ -391,22 +402,27 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
      *new TMenuItem( "~R~eload", cmReload, kbF5, hcNoContext, "F5" )+
      newLine()+
      *new TMenuItem( "E~x~it", cmQuit, kbAltX, hcNoContext, "" )+
+
+     *new TSubMenu( "~V~iew", kbAltW )+
+     *new TMenuItem( "~C~pu", cmShowProcessorWindow,  kbAltC, hcNoContext, "" )+
+     *new TMenuItem( "~D~isassembly", cmAddDisassemblyWindow,  kbAltD, hcNoContext, "" )+
+     *new TMenuItem( "~M~em", cmAddMemoryWindow,  kbAltM, hcNoContext, "" )+
+     *new TMenuItem( "~E~xecution", cmShowExecutionWindow,  kbAltE, hcNoContext, "" )+
+     
      *new TSubMenu("RAM",kbNoKey)+
      *new TMenuItem("Load",cmLoadRam,kbNoKey,hcNoContext,"")+
-     *new TMenuItem("Reset",cmResetRam,kbNoKey,hcNoContext,"")+
-
+     *new TMenuItem("Reset",cmResetRam,kbNoKey,hcNoContext,"")+     
+     
      *new TSubMenu("Disasm",kbNoKey)+
      *new TMenuItem("Reset",cmResetDisasm,kbNoKey,hcNoContext,"")+
 
      *new TSubMenu("Cartridge",kbNoKey)+
      *new TMenuItem("Reset",cmResetCartridge,kbNoKey,hcNoContext,"")+
-     
-     *new TSubMenu( "~V~iew", kbAltW )+
-     *new TMenuItem( "~C~pu", cmShowProcessorWindow,  kbAltC, hcNoContext, "" )+
-     *new TMenuItem( "~D~isassembly", cmAddDisassemblyWindow,  kbAltD, hcNoContext, "" )+
-     *new TMenuItem( "~M~em", cmAddMemoryWindow,  kbAltM, hcNoContext, "" )+
-     *new TMenuItem( "~E~xecution", cmShowExecutionWindow,  kbAltE, hcNoContext, "" )
 
+     *new TSubMenu("Breakpt",kbNoKey)+
+     *new TMenuItem("Clear",cmBreakpointsClear,kbNoKey,hcNoContext,"")+
+     *new TMenuItem("Reload",cmBreakpointsReload,kbF6,hcNoContext,"")
+     
 
      
 
@@ -527,20 +543,58 @@ void TurboZ::openFile( const char *fileSpec)
 }
 
 
-void TurboZ::reload(){
-  auto breakpoints=system.breakpoints.getBreakpoints();
+class BreakpointSet{
+public:
+  void retrieveFrom(const System& system);
+  void retrieveFrom(const libconfig::Setting& setting);
+  void addTo(System& system);
+  void addTo(libconfig::Setting& setting);
   std::vector<std::string> labels;
   std::vector<uint16_t> addrs;
+};
+
+
+void BreakpointSet::retrieveFrom(const System& system){
+  auto breakpoints=system.breakpoints.getBreakpoints();
+
   for (auto addr:breakpoints){
-    std::string* thisLabel;
+    const std::string* thisLabel;
     if ((thisLabel=system.symbols.getLabel(addr))){
       labels.push_back(*thisLabel);
     }else{
       addrs.push_back(addr);
     }
   }
-  system.loadCartridge(cfg.getRoot()[CFG_LASTOPENED]);
-  system.breakpoints.clear();
+}
+
+void BreakpointSet::retrieveFrom(const libconfig::Setting& bps){
+  libconfig::Setting& ls=bps["labels"];
+  libconfig::Setting& as=bps["addresses"];
+  for (int i=0;i<ls.getLength();i++){
+    labels.push_back(ls[i]);
+  }
+  for (int i=0;i<as.getLength();i++){
+    addrs.push_back(static_cast<int>(as[i]));
+  }  
+}
+
+void BreakpointSet::addTo(libconfig::Setting& bps){
+  libconfig::Setting& labelStg=bps.add("labels",libconfig::Setting::TypeArray);
+  libconfig::Setting& addrStg=bps.add("addresses",libconfig::Setting::TypeArray); 
+  int cnt=0;
+  for (auto &label:labels){
+    labelStg.add(libconfig::Setting::TypeString);
+    labelStg[cnt++]=label;
+  }
+  cnt=0;
+  for (auto &addr:addrs){
+    addrStg.add(libconfig::Setting::TypeInt);
+    addrStg[cnt].setFormat(libconfig::Setting::FormatHex);
+    addrStg[cnt++]=addr;
+  }
+}
+
+void BreakpointSet::addTo(System& system){
   for (auto addr:addrs){
     system.breakpoints.add(addr);
   }
@@ -549,6 +603,14 @@ void TurboZ::reload(){
       system.breakpoints.add(system.symbols.getAddress(label));
     }
   }
+}
+
+void TurboZ::reload(){
+  BreakpointSet bs;
+  bs.retrieveFrom(system);  
+  system.loadCartridge(cfg.getRoot()[CFG_LASTOPENED]);
+  system.breakpoints.clear();
+  bs.addTo(system);
 }
 
 void TurboZ::log(TurboZ::LogType,const std::string& ){
@@ -568,12 +630,7 @@ std::string TurboZ::getLastDirectory(const char* property){
   return directory;
 }
 
-void  TurboZ::storeFilename(const char* property,const char* filename){
-  libconfig::Setting& root=cfg.getRoot();
-  if (!cfg.exists(property)){
-    root.add(property,libconfig::Setting::TypeString);
-  }
-  root[property]=filename;
+void TurboZ::storeConfig(){
   try{
     cfg.writeFile(CFGFILENAME);
   }catch(const libconfig::FileIOException &fioex){
@@ -581,12 +638,54 @@ void  TurboZ::storeFilename(const char* property,const char* filename){
   }    
 }
 
+void  TurboZ::storeFilename(const char* property,const char* filename){
+  libconfig::Setting& root=cfg.getRoot();
+  if (!cfg.exists(property)){
+    root.add(property,libconfig::Setting::TypeString);
+  }
+  root[property]=filename;
+  storeConfig();
+}
+
+
+void TurboZ::loadBreakpoints(){
+  BreakpointSet bps;
+  bps.retrieveFrom(cfg.getRoot()[CFG_LASTBREAKPOINTS]);
+  bps.addTo(system);
+}
+
+void TurboZ::storeBreakpoints(){
+  if (cfg.exists(CFG_LASTBREAKPOINTS)){
+    cfg.getRoot().remove(CFG_LASTBREAKPOINTS);
+  }  
+  libconfig::Setting& bps=cfg.getRoot().add(CFG_LASTBREAKPOINTS,libconfig::Setting::TypeGroup);
+  BreakpointSet bs;
+  bs.retrieveFrom(system);
+  bs.addTo(bps); 
+  storeConfig();
+}
+
+void TurboZ::onExit(){
+  storeBreakpoints();
+}
+
+TurboZ::~TurboZ(){
+  onExit();
+}
+
+TurboZ* tzInstance=nullptr;
+void finalize(int signal){
+  tzInstance->onExit();
+   exit(0);
+}
 
 int main()
 {
 
   System system;
   TurboZ turboz(system);  
+  tzInstance=&turboz;
+  std::signal(SIGINT,finalize);
   turboz.run();
   return 0;
 }

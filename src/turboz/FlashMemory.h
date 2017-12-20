@@ -22,7 +22,7 @@ public:
     size_t matchCount;
   };
 
-  FlashMemory(uint32_t size);
+  FlashMemory(uint32_t size=0);
   void load(const std::string& fname);
   void store(const std::string& fname);
   void eval(uint32_t addr,uint8_t& data,bool _ce,bool _we,bool _oe);
@@ -33,6 +33,8 @@ public:
     SectorInfo(uint32_t _start,uint32_t _size):start(_start),size(_size){}
   };
   std::vector<SectorInfo> sectors;
+  uint8_t* GetROM();
+  int GetROMSize();
 private:
   std::vector<uint8_t> data;
   void write(uint32_t addr,uint8_t data);

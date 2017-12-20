@@ -146,7 +146,7 @@ void DisassemblyWindow::generateContent(TView& sink,TPoint& delta,TPoint& size){
   
   int labelLength;
   ClippedString cs;
-  std::string* labelString;
+  const std::string* labelString;
   for( int i = 0; i < size.y; i++ ){   
     int addr = delta.y + i;       // delta is scroller offset          
     TDrawBuffer b;

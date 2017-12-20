@@ -80,7 +80,7 @@ Disassembly::Info Disassembly::disassembleWithSymbols(char* dis, int disMaxLengt
   info.length=z80ex_dasm(dis,disMaxLength,NO_FLAGS,&info.t_states,&info.t_states2,read_callback,addr,memory);
 
   int len=strlen(dis);
-  std::string* label=nullptr;
+  const std::string* label=nullptr;
 
   for (int i=0;i<len;i++){
     if (dis[i]=='#'){

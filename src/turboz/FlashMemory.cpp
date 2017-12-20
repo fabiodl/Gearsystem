@@ -53,8 +53,11 @@ FlashMemory::FlashMemory(uint32_t size):data(size,0xFF){
 
 
 void FlashMemory::load(const std::string& fname){
-  std::ifstream in(fname.c_str(),std::ifstream::binary);
-  in.read(reinterpret_cast<char*>(&data[0]),data.size());
+  std::ifstream is(fname.c_str(),std::ifstream::binary);
+  is.seekg(0,is.end);
+  data.resize(is.tellg());
+  is.seekg(0,is.beg);
+  is.read(reinterpret_cast<char*>(&data[0]),data.size());
 }
 
 void FlashMemory::store(const std::string& fname){
@@ -122,4 +125,12 @@ void FlashMemory::eval(uint32_t addr,uint8_t& datalines,bool _ce,bool _we,bool _
     }
   }
 
+}
+
+int FlashMemory::GetROMSize(){
+  return data.size();
+}
+
+uint8_t* FlashMemory::GetROM(){
+  return &data[0];
 }

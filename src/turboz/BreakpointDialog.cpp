@@ -25,7 +25,7 @@ BreakpointDialog::BreakpointDialog(const TRect& pos,const char* title,AddressFin
   //auto list = new TStringCollection(0,1);
   for (auto addr:bp.getBreakpoints()){
     std::string label;    
-    std::string* isLabel=addrFind.syms.getLabel(addr);
+    const std::string* isLabel=addrFind.syms.getLabel(addr);
     if (isLabel){
       label=*isLabel;
       if (label.length()>100){

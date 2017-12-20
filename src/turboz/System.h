@@ -13,7 +13,7 @@
 class System{
 public:
   System();
-  Cartridge cartridge; 
+  FlashCartridge cartridge; 
   Memory memory;
   FlexMemoryRule rule;
   DummyIOPorts dummyIO;

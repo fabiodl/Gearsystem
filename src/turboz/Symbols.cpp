@@ -38,27 +38,28 @@ void Symbols::loadFromFile(const std::string& filename){
 
 }
 
-size_t Symbols::getLabelMaxLength(){
+size_t Symbols::getLabelMaxLength() const{
   return maxLength;
 }
 
 
-std::string* Symbols::getLabel(uint16_t addr){
-  if (sym.find(addr)==sym.end()){
+const std::string* Symbols::getLabel(uint16_t addr) const{
+  auto it=sym.find(addr);
+  if (it==sym.end()){
     return NULL;
-  }
-  return &sym[addr];
-  
+  }else{
+    return &it->second;
+  }  
 }
 
 
 
 
 
-std::vector<std::pair<uint16_t,std::string*> > Symbols::getSubstringMatches(const std::string& s){
-  std::vector<std::pair<uint16_t,std::string*> > matches;
+std::vector<std::pair<uint16_t,const std::string*> > Symbols::getSubstringMatches(const std::string& s) const{
+  std::vector<std::pair<uint16_t,const std::string*> > matches;
 
-  for (std::map<uint16_t,std::string>::iterator it=sym.begin();
+  for (auto it=sym.begin();
        it!=sym.end();++it){
     if (istring(it->second).find(istring(s.c_str()))!=std::string::npos){
       matches.push_back(std::make_pair(it->first,&it->second));
@@ -71,9 +72,8 @@ std::vector<std::pair<uint16_t,std::string*> > Symbols::getSubstringMatches(cons
 }
 
 
-void Symbols::getSubstringMatches(const char* s,void (*cb)(const char*,void*),void* userData){
-   for (std::map<uint16_t,std::string>::iterator it=sym.begin();
-       it!=sym.end();++it){
+void Symbols::getSubstringMatches(const char* s,void (*cb)(const char*,void*),void* userData) const{
+   for (auto it=sym.begin();it!=sym.end();++it){
     if (istring(it->second).find(istring(s))!=std::string::npos){
       (*cb)(it->second.c_str(),userData);
     }
@@ -81,9 +81,8 @@ void Symbols::getSubstringMatches(const char* s,void (*cb)(const char*,void*),vo
 }
 
 
-bool Symbols::isAvailable(const std::string& s){
-  for (std::map<uint16_t,std::string>::iterator it=sym.begin();
-       it!=sym.end();++it){
+bool Symbols::isAvailable(const std::string& s) const{
+  for (auto it=sym.begin();it!=sym.end();++it){
     if (it->second==s){
       return true;
     }
@@ -91,8 +90,8 @@ bool Symbols::isAvailable(const std::string& s){
   return false;
 }
 
-uint16_t Symbols::getAddress(const std::string& s){
-  for (std::map<uint16_t,std::string>::iterator it=sym.begin();
+uint16_t Symbols::getAddress(const std::string& s)const{
+  for (std::map<uint16_t,std::string>::const_iterator it=sym.begin();
        it!=sym.end();++it){
     if (it->second==s){
       return it->first;
@@ -101,9 +100,8 @@ uint16_t Symbols::getAddress(const std::string& s){
   throw std::invalid_argument(std::string("Symbol ")+s+" not found");
 }
 
-
-uint32_t Symbols::getAddressExtended(const std::string& s){
-  for (std::map<uint16_t,std::string>::iterator it=sym.begin();
+uint32_t Symbols::getAddressExtended(const std::string& s)const {
+  for (std::map<uint16_t,std::string>::const_iterator it=sym.begin();
        it!=sym.end();++it){
     if (it->second==s){
       return it->first;

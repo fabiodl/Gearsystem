@@ -23,7 +23,8 @@ public:
   void idle();
   void requestRun(Spinner::Work* work,Spinner::HaltCondition* haltCondition);
   void requestHalt();
-  
+  void onExit();
+  ~TurboZ();
 private:
   template<typename WindowType> void showWindow();
   template<typename WindowType> void addWindow();
@@ -44,7 +45,9 @@ private:
   void saveRam();
   std::string getLastDirectory(const char* property);
   void storeFilename(const char* property,const char* filename);
-
+  void loadBreakpoints();
+  void storeBreakpoints();
+  void storeConfig();
 };
 
 #endif

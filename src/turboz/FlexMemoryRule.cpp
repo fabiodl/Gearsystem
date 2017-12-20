@@ -12,8 +12,9 @@
 Vmapper m;
 
 
-FlexMemoryRule::FlexMemoryRule(Memory* pMemory, Cartridge* pCartridge):
-  MemoryRule(pMemory,pCartridge)
+FlexMemoryRule::FlexMemoryRule(Memory* pMemory, FlashCartridge* pCartridge):
+  MemoryRule(pMemory,pCartridge),
+  flash(pCartridge)
 {
   
 }
@@ -45,7 +46,7 @@ u8 FlexMemoryRule::PerformRead(u16 address){
   if (!m.ramCe){ //assume rd
     return sRam[m.ram_haddr][lowAddr];
   }else if (!m.romCe){
-    if (!m_pCartridge->GetROMSize()){
+    if (!flash->GetROMSize()){
       //std::cout<<"Empty cartridge"<<std::endl;
       return 0;
     }
@@ -53,7 +54,7 @@ u8 FlexMemoryRule::PerformRead(u16 address){
       (m.rom_haddr<<14)+
       lowAddr;
     //std::cout<<"rom addr"<<idx<<std::endl;
-    return m_pCartridge->GetROM()[idx%m_pCartridge->GetROMSize()];
+    return flash->GetROM()[idx%flash->GetROMSize()];
   }else if (isBank3){
     return m_pMemory->Retrieve(address);
   }else{

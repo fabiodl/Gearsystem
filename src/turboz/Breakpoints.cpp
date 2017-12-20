@@ -8,7 +8,7 @@ void Breakpoints::remove(uint16_t addr){
   breakpoints.erase(addr);
 }
 
-bool Breakpoints::isBreakpoint(uint16_t addr){
+bool Breakpoints::isBreakpoint(uint16_t addr) const{
   return breakpoints.find(addr)!=breakpoints.end();
 }
 
@@ -20,7 +20,7 @@ void Breakpoints::toggle(uint16_t addr){
   }
 }
 
-const std::set<uint16_t>& Breakpoints::getBreakpoints(){
+const std::set<uint16_t>& Breakpoints::getBreakpoints() const{
   return breakpoints;
 }
 
