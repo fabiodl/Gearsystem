@@ -21,7 +21,7 @@ public:
   Disassembly disassembly;  
   Symbols symbols;
   AddressFinder addrFind;
-  unsigned int Tick();
+  virtual unsigned int Tick();
   void Reset();
   Breakpoints breakpoints;
   void loadCartridge(const std::string& s);

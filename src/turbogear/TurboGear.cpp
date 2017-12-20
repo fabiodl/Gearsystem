@@ -4,12 +4,16 @@
 #include <Video.h>
 #include <Audio.h>
 #include <Input.h>
+#include "VDPView.h"
+
 
 TurboZ* tzInstance=nullptr;
 void finalize(int signal){
   tzInstance->onExit();
    exit(0);
 }
+
+
 
 
 class TurboGear{ 
@@ -32,14 +36,15 @@ TurboGear::TurboGear():
 }
 
 
-int main(){
-  
-  
-  TurboGear turboGear;
-  
+
+int main(){    
+  TurboGear turboGear;  
   TurboZ turboz(turboGear.system);  
   tzInstance=&turboz;
   std::signal(SIGINT,finalize);
+  VDPView vdpView;
+
+  //vdpView.draw(buffer);  
   turboz.run();
   return 0;
 }
