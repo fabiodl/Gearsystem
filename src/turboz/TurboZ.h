@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <atomic>
 #include <libconfig.h++>
+#include "System.h"
 
 
 class TurboZ : public TApplication

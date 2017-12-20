@@ -28,7 +28,7 @@
 
 #include "LoadRamDialog.h"
 
-#include <csignal>
+
 
 static const char* CFGFILENAME="turboz.cfg";
 static const char* CFG_LASTOPENED="lastopened";
@@ -671,21 +671,4 @@ void TurboZ::onExit(){
 
 TurboZ::~TurboZ(){
   onExit();
-}
-
-TurboZ* tzInstance=nullptr;
-void finalize(int signal){
-  tzInstance->onExit();
-   exit(0);
-}
-
-int main()
-{
-
-  System system;
-  TurboZ turboz(system);  
-  tzInstance=&turboz;
-  std::signal(SIGINT,finalize);
-  turboz.run();
-  return 0;
 }
