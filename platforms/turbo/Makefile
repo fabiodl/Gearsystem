@@ -13,7 +13,7 @@ SHAREDOBJS= $(COREOBJS) $(TURBOOBJS) $(DISOBJS) $(MAPPEROBJS)
 
 TZOBJS = $(SHAREDOBJS) $(TOD)/main.o
 
-TGCOREOBJS = $(TGOD)/Audio.o $(TGOD)/audio/Sms_Apu.o $(TGOD)/audio/Sound_Queue.o $(TGOD)/audio/Blip_Buffer.o $(TGOD)/audio/Multi_Buffer.o $(TGOD)/Video.o $(TGOD)/Input.o $(TGOD)/GameGearIOPorts.o 
+TGCOREOBJS = $(TGOD)/Audio.o $(TGOD)/audio/Sms_Apu.o $(TGOD)/audio/Sound_Queue.o $(TGOD)/audio/Blip_Buffer.o $(TGOD)/audio/Multi_Buffer.o $(TGOD)/Video.o $(TGOD)/Input.o $(TGOD)/GameGearIOPorts.o $(TGOD)/SmsIOPorts.o
 
 TGOBJS = $(SHAREDOBJS) $(TGCOREOBJS) $(TGOD)/turbogear/TurboGear.o $(TGOD)/turbogear/VDPView.o
 

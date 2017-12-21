@@ -9,7 +9,25 @@
 #include "Cartridge.h"
 #include "Memory.h"
 
+
+using namespace std;
 Vmapper m;
+
+
+template<typename T> void printHex(const std::string& prefix,T& val){
+  cout<<prefix<<hex<<(int)val<<dec<<endl;
+}
+
+void printState(){
+  cout<<"{------------"<<endl;
+  printHex("data",m.data);  
+  printHex("setSlot",m.v__DOT__setSlot);
+  printHex("ROM HADDR",m.rom_haddr);
+  for (int i=0;i<4;i++){
+    printHex("banks[" "]",m.v__DOT__banks[i]);
+  }
+  cout<<"------------}"<<endl;
+}
 
 
 FlexMemoryRule::FlexMemoryRule(Memory* pMemory, FlashCartridge* pCartridge):
@@ -31,12 +49,15 @@ u8 FlexMemoryRule::PerformRead(u16 address){
   std::lock_guard<std::mutex> lock(access);
   defaultInputs();
   m.addr=address;
-  m.wr=0;
+  m.wr=1;
+  m.eval();
+  //cout<<"read from "<<hex<<address<<dec<<endl;
+  //  printState();
+  
   uint16_t lowAddr=address&((1<<14)-1);
   bool isBank3=0xC000<=address && address<=0XFFFF;
-  m.eval();
-  //  std::cout<<std::hex<<address<<std::dec<<" ramCe"<<(bool)m.ramCe<<"romCe"<<(bool)m.romCe<<"isBank3"<<isBank3<<std::endl;
 
+  
   if (!m.ramCe && !m.romCe){
     std::cerr<<"SRAM-ROM CONFLICT!"<<std::endl;
   }
@@ -71,6 +92,8 @@ void FlexMemoryRule::PerformWrite(u16 address, u8 value){
     m.data=value;
     m.wr=0;
     m.eval();
+    //cout<<"wrote "<<hex<<(int)value<<" to "<<hex<<address<<dec<<endl;
+    //printState();
     uint16_t lowAddr=address&((1<<14)-1);
     bool isBank3=0xC000<=address && address<=0XFFFF;
     //std::cout<<"write "<<std::hex<<address<<std::dec<<" ramCe"<<(bool)m.ramCe<<"romCe"<<(bool)m.romCe<<"isBank3"<<isBank3<<"killMem"<<(bool)m.killmem<<std::endl;

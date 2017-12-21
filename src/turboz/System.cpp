@@ -13,6 +13,7 @@ System::System():
   //add exceptions when it returns false 
   //loadCartridge("/home/fabio/dev/s/workspace/mapper/mapper.sg");
   memory.Init();
+  processor.Init();
   memory.SetCurrentRule(&rule);
   processor.SetIOPorts(&dummyIO);
 

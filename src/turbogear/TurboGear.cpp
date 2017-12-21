@@ -1,11 +1,16 @@
 #include <csignal>
 #include <TurboZ.h>
 #include <GameGearIOPorts.h>
+#include <SmsIOPorts.h>
 #include <Video.h>
 #include <Audio.h>
 #include <Input.h>
 #include "VDPView.h"
+#include <mutex>
+#include <atomic>
+#include <memory>
 
+enum SystemType{GAMEGEAR,MASTERSYSTEM};
 
 TurboZ* tzInstance=nullptr;
 void finalize(int signal){
@@ -13,36 +18,133 @@ void finalize(int signal){
    exit(0);
 }
 
-
-
-
-class TurboGear{ 
+class FrameBuffer{
 public:
-  TurboGear();    
-  System system;
-private:
+  GS_Color* get();
+  void release();
+  FrameBuffer();
+  void setBlanked();
+  bool isBlanked();
+private:  
+  std::mutex mutex;
+  std::vector<GS_Color> frameBuffer;
+  std::atomic_bool blanked;
+};
+
+
+class TGSystem:public System{
+public:
+  virtual unsigned int Tick();
   Audio audio;
   Video video;
   Input input;
-  GameGearIOPorts ioports;
+  std::unique_ptr<IOPorts> ioports;
+  FrameBuffer frameBuffer;
+  TGSystem(SystemType systemType);
+   
 };
 
-TurboGear::TurboGear():
-  video(&system.memory,&system.processor),
-  input(&system.processor),//for requesting NMI
-  ioports(&audio,&video,&input,&system.cartridge)
+
+class TurboGear:public TurboZ{
+public:
+  TurboGear(TGSystem& tgs);
+  void idle();
+private:
+  VDPView vdpView;
+  FrameBuffer& frameBuffer;
+};
+
+
+static const GS_Color black={0,0,0,0};
+
+FrameBuffer::FrameBuffer():
+  frameBuffer(GS_SMS_WIDTH*GS_SMS_HEIGHT,black)
 {
-  system.processor.SetIOPorts(&ioports);
+}
+
+void FrameBuffer::setBlanked(){
+  blanked=true;
+}
+  
+bool FrameBuffer::isBlanked(){
+  return blanked.exchange(false);
+}
+
+
+GS_Color* FrameBuffer::get(){
+  mutex.lock();
+  return frameBuffer.data();
+}
+
+void FrameBuffer::release(){
+  mutex.unlock();
+}
+
+TGSystem::TGSystem(SystemType systemType):
+  video(&memory,&processor),
+  input(&processor)//for requesting NMI
+{
+  switch(systemType){
+  case MASTERSYSTEM:
+    ioports.reset(new SmsIOPorts(&audio,&video,&input,&cartridge));
+    break;
+  case GAMEGEAR:
+    ioports.reset(new GameGearIOPorts(&audio,&video,&input,&cartridge));
+    break;
+  }
+  processor.SetIOPorts(ioports.get());
+  audio.Init();
+  video.Init();
+  input.Init();
+  frameBuffer.setBlanked();
+  audio.Enable(false);
+}
+
+
+unsigned int TGSystem::Tick(){
+  unsigned int cpuCycles = processor.Tick();
+  bool vblank = video.Tick(cpuCycles,frameBuffer.get());
+  frameBuffer.release();
+  //audio.Tick(cpuCycles);
+  input.Tick(cpuCycles);
+  if (vblank){
+    std::cout<<"vblank"<<std::endl;
+    //audio.EndFrame();
+    frameBuffer.setBlanked();
+  }
+  return cpuCycles;
+}
+
+TurboGear::TurboGear(TGSystem& tgs):
+  TProgInit( &TurboZ::initStatusLine,
+             &TurboZ::initMenuBar,
+             &TurboZ::initDeskTop
+             ),
+  TurboZ(tgs),
+  frameBuffer(tgs.frameBuffer)
+{
+  
+}
+
+
+void TurboGear::idle(){
+  TurboZ::idle();
+  //if (frameBuffer.isBlanked()){
+  //std::cout<<"vdp draw"<<std::endl;
+  vdpView.draw(frameBuffer.get());
+  frameBuffer.release();
+    //}
+    
 }
 
 
 
 int main(){    
-  TurboGear turboGear;  
-  TurboZ turboz(turboGear.system);  
+  TGSystem tgSystem(MASTERSYSTEM);  
+  TurboGear turboz(tgSystem);  
   tzInstance=&turboz;
   std::signal(SIGINT,finalize);
-  VDPView vdpView;
+  
 
   //vdpView.draw(buffer);  
   turboz.run();
