@@ -367,7 +367,9 @@ void TurboZ::handleEvent(TEvent& event){
 	loadBreakpoints();
 	refreshState();
 	break;
-        
+      case cmDescribeCartridge:
+	std::cout<<system.rule.describe()<<std::endl;
+	break;
       }
     }
     TApplication::handleEvent(event);
@@ -418,6 +420,7 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
 
      *new TSubMenu("Cartridge",kbNoKey)+
      *new TMenuItem("Reset",cmResetCartridge,kbNoKey,hcNoContext,"")+
+     *new TMenuItem("Info",cmDescribeCartridge,kbNoKey,hcNoContext,"")+
 
      *new TSubMenu("Breakpt",kbNoKey)+
      *new TMenuItem("Clear",cmBreakpointsClear,kbNoKey,hcNoContext,"")+

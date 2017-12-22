@@ -8,26 +8,30 @@
 #include "PhysicalIo.h"
 #include "Cartridge.h"
 #include "Memory.h"
-
+#include <sstream>
 
 using namespace std;
 Vmapper m;
 
 
-template<typename T> void printHex(const std::string& prefix,T& val){
-  cout<<prefix<<hex<<(int)val<<dec<<endl;
+template<typename T> void printHex(const std::string& prefix,T& val,std::ostream& out=cout){
+  out<<prefix<<hex<<(int)val<<dec<<endl;
 }
 
-void printState(){
-  cout<<"{------------"<<endl;
-  printHex("data",m.data);  
-  printHex("setSlot",m.v__DOT__setSlot);
-  printHex("ROM HADDR",m.rom_haddr);
+std::string FlexMemoryRule::describe() const{
+  std::stringstream ss;
+  ss<<"{------------"<<endl;
+  printHex("addr",m.addr,ss);
+  printHex("data",m.data,ss);  
+  printHex("setSlot",m.v__DOT__setSlot,ss);
+  printHex("ROM HADDR",m.rom_haddr,ss);
   for (int i=0;i<4;i++){
-    printHex("banks[" "]",m.v__DOT__banks[i]);
+    printHex("banks[" "]",m.v__DOT__banks[i],ss);
   }
-  cout<<"------------}"<<endl;
+  ss<<"------------}"<<endl;
+  return ss.str();
 }
+
 
 
 FlexMemoryRule::FlexMemoryRule(Memory* pMemory, FlashCartridge* pCartridge):

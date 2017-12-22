@@ -25,7 +25,8 @@ enum Commands{
   cmResetDisasm,
   cmResetCartridge,
   cmBreakpointsClear,
-  cmBreakpointsReload
+  cmBreakpointsReload,  
+  cmDescribeCartridge
 };
 
 

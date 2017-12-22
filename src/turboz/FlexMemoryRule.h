@@ -19,6 +19,7 @@ public:
   virtual u8 PerformRead(u16 address);
   virtual void PerformWrite(u16 address, u8 value);
   virtual void Reset();  
+  std::string describe() const;
 private:
   void defaultInputs();
   uint8_t sRam[2][16*1024]; 

@@ -67,3 +67,10 @@ xcuserdata/
 *.xcsettings
 
 platforms/ios/Gearsystem.xcodeproj/project.xcworkspace/xcshareddata/Gearsystem.xccheckout
+/platforms/linux/Gearsystem/Gearsystem
+*~
+/platforms/turbo/tgbuild/
+/platforms/turbo/turbogear
+/platforms/turbo/turboz
+platforms/linux/Gearsystem/Makefile
+

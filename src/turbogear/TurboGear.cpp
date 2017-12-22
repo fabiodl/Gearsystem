@@ -94,6 +94,7 @@ TGSystem::TGSystem(SystemType systemType):
   }
   processor.SetIOPorts(ioports.get());
   audio.Init();
+  SDL_PauseAudio(true);
   video.Init();
   input.Init();
   frameBuffer.setBlanked();
@@ -105,11 +106,10 @@ unsigned int TGSystem::Tick(){
   unsigned int cpuCycles = processor.Tick();
   bool vblank = video.Tick(cpuCycles,frameBuffer.get());
   frameBuffer.release();
-  //audio.Tick(cpuCycles);
+  audio.Tick(cpuCycles);
   input.Tick(cpuCycles);
   if (vblank){
-    std::cout<<"vblank"<<std::endl;
-    //audio.EndFrame();
+    audio.EndFrame();
     frameBuffer.setBlanked();
   }
   return cpuCycles;
@@ -129,11 +129,10 @@ TurboGear::TurboGear(TGSystem& tgs):
 
 void TurboGear::idle(){
   TurboZ::idle();
-  //if (frameBuffer.isBlanked()){
-  //std::cout<<"vdp draw"<<std::endl;
-  vdpView.draw(frameBuffer.get());
-  frameBuffer.release();
-    //}
+  if (frameBuffer.isBlanked()){
+    vdpView.draw(frameBuffer.get());
+    frameBuffer.release();
+  }
     
 }
 
@@ -145,8 +144,6 @@ int main(){
   tzInstance=&turboz;
   std::signal(SIGINT,finalize);
   
-
-  //vdpView.draw(buffer);  
   turboz.run();
   return 0;
 }
