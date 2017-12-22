@@ -8,7 +8,6 @@ Spinner::Spinner():
   
 }
 
-
 bool Spinner::isRunning(){
   return state==working;
 }
@@ -25,7 +24,6 @@ Spinner::~Spinner(){
   }  
   spinner.join();
 }
-
 
 void Spinner::blockingHalt(){
   std::unique_lock<std::mutex> lock(workm);
@@ -64,7 +62,6 @@ void Spinner::setWork(Work* _work,const HaltCondition* _haltCondition){
   cv.notify_all();
 }
 
-
 template<typename T>
 class unlock_guard{
   T & m;
@@ -79,7 +76,6 @@ public:
   }
   
 };
-
 
 void Spinner::waitForWork(){
   std::unique_lock<std::mutex> lock(workm);
@@ -107,11 +103,15 @@ void Spinner::waitForWork(){
       for (auto c:onHalt){
         c();
       }
-      state=idle;
+      if (state==working){
+	state=idle;
+      }
       cv.notify_all();
       //std::cout<<"now idle"<<std::endl;
     }//if state==workRequested
-    cv.wait(lock);
+   
+    if (state!=destroyRequested){
+      cv.wait(lock);
+    }
   }
-
 }

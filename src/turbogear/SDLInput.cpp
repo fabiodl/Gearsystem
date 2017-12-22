@@ -12,6 +12,7 @@ SDLInput::SDLInput(){
   keyMap[SDLK_x]=make_pair(Joypad_1,Key_1);
   keyMap[SDLK_c]=make_pair(Joypad_1,Key_2);
   keyMap[SDLK_s]=make_pair(Joypad_1,Key_Start);
+  keyMap[SDLK_p]=make_pair(Joypad_1,Key_Start);
   
 }
 
