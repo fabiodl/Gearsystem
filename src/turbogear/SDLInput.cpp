@@ -3,9 +3,6 @@
 using namespace std;
 
 SDLInput::SDLInput(){
-  for (int j=0;j<2;j++){
-    state[j].resize(Key_Start+1,UP);
-  }
   globalRelease=SDLK_r;
 
   keyMap[SDLK_UP]=make_pair(Joypad_1,Key_Up);
@@ -19,16 +16,15 @@ SDLInput::SDLInput(){
 }
 
 
-void SDLInput::update(){
-  lock_guard<std::mutex> lock(mutex);
+void SDLInput::get(InputBuffer& buffer){
   SDL_Event event;
   while (SDL_PollEvent( &event )){
     switch( event.type ){
     case SDL_KEYDOWN:
-      push (event.key.keysym.sym,event.key.keysym.mod);
+      push(buffer,event.key.keysym.sym,event.key.keysym.mod);
       break;      
     case SDL_KEYUP:
-      push (event.key.keysym.sym,event.key.keysym.mod);
+      release(buffer,event.key.keysym.sym,event.key.keysym.mod);
       break;
       
     default:
@@ -38,46 +34,34 @@ void SDLInput::update(){
 }
 
 
-void SDLInput::apply(Input& input){
-  for (int j=0;j<2;j++){
-    for (size_t b=0;b<state[j].size();b++){
-      switch(state[j][b]){
-      case DOWN:
-      case STICKY:
-	input.KeyPressed(static_cast<GS_Joypads>(j),
-			 static_cast<GS_Keys>(b)
-			 );
-	break;
-      case UP:
-	input.KeyReleased(static_cast<GS_Joypads>(j),
-			  static_cast<GS_Keys>(b)
-			  );
-      }
-    }//for b
-  }//for j
-}//apply
-  
-void SDLInput::push(SDL_Keycode sym,uint16_t mod){
+
+void SDLInput::push(InputBuffer& buffer,SDL_Keycode sym,uint16_t mod){
   auto it=keyMap.find(sym);
   if ( it !=keyMap.end()){
-    state[it->second.first][it->second.second] =mod&KMOD_SHIFT?STICKY:DOWN;
+    buffer.set(it->second.first,it->second.second,
+	       mod&KMOD_SHIFT?InputBuffer::STICKY:InputBuffer::DOWN);
+
   }
   if (sym==globalRelease){
+    InputBuffer::InputState& state=buffer.getState();
     for (int j=0;j<2;j++){
       for (auto& s:state[j]){
-	s=UP;
+	s=InputBuffer::UP;
       }
     }
+    buffer.releaseState();
   }  
 }
 
 
-void SDLInput::release(SDL_Keycode sym,uint16_t mod){
+void SDLInput::release(InputBuffer& buffer,SDL_Keycode sym,uint16_t mod){
   auto it=keyMap.find(sym);
   if ( it !=keyMap.end()){
-    KeyState& s=state[it->second.first][it->second.second];
-    if (s==DOWN&& !(mod& KMOD_SHIFT) ){
-      s=UP;
+    InputBuffer::InputState& state=buffer.getState();
+    InputBuffer::KeyState& s=state[it->second.first][it->second.second];
+    if (s==InputBuffer::DOWN&& !(mod& KMOD_SHIFT) ){
+      s=InputBuffer::UP;
     }
+    buffer.releaseState();
   }
 }

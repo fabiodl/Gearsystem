@@ -7,7 +7,7 @@
 #include <Input.h>
 #include "System.h"
 #include "FrameBuffer.h"
-
+#include "InputBuffer.h"
 
 class TGSystem:public System{
 public:
@@ -17,6 +17,7 @@ enum SystemType{GAMEGEAR,MASTERSYSTEM};
   Input input;
   std::unique_ptr<IOPorts> ioports;
   FrameBuffer frameBuffer;
+  InputBuffer inputBuffer;
   TGSystem(SystemType systemType);
   virtual unsigned int Tick();
 };

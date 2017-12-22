@@ -16,6 +16,7 @@ private:
   VDPView vdpView;
   SDLInput sdlInput;
   FrameBuffer& frameBuffer;
+  InputBuffer& inputBuffer;
 };
 
 

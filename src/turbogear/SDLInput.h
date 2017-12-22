@@ -2,23 +2,20 @@
 #define _SDLINPUT_H_
 
 #include <SDL.h>
-#include "Input.h"
-#include <mutex>
 #include <vector>
 #include <map>
+#include "InputBuffer.h"
 
 class SDLInput{
 public:
   SDLInput();
-  void update();
-  void apply(Input& input);
-  std::mutex mutex;
+  void get(InputBuffer& buffer);
+ 
+
 private:
-  enum KeyState{DOWN,UP,STICKY};
-  std::vector<KeyState> state[2];//one for each joypad
   std::map<SDL_Keycode,std::pair<GS_Joypads,GS_Keys> > keyMap;
-  void push(SDL_Keycode sym,uint16_t mod);
-  void release(SDL_Keycode sym,uint16_t mod);
+  void push(InputBuffer& buffer,SDL_Keycode sym,uint16_t mod);
+  void release(InputBuffer& buffer,SDL_Keycode sym,uint16_t mod);
   SDL_Keycode globalRelease;
 };
 

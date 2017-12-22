@@ -26,6 +26,7 @@ TGSystem::TGSystem(SystemType systemType):
 
 
 unsigned int TGSystem::Tick(){
+  inputBuffer.copyTo(input);
   unsigned int cpuCycles = processor.Tick();
   bool vblank = video.Tick(cpuCycles,frameBuffer.get());  
   frameBuffer.release();

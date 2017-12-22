@@ -15,7 +15,7 @@ TZOBJS = $(SHAREDOBJS) $(TOD)/main.o
 
 TGCOREOBJS = $(TGOD)/Audio.o $(TGOD)/audio/Sms_Apu.o $(TGOD)/audio/Sound_Queue.o $(TGOD)/audio/Blip_Buffer.o $(TGOD)/audio/Multi_Buffer.o $(TGOD)/Video.o $(TGOD)/Input.o $(TGOD)/GameGearIOPorts.o $(TGOD)/SmsIOPorts.o
 
-TGOBJS = $(SHAREDOBJS) $(TGCOREOBJS) $(TGOD)/turbogear/TurboGear.o $(TGOD)/turbogear/VDPView.o $(TGOD)/turbogear/SDLInput.o $(TGOD)/turbogear/FrameBuffer.o $(TGOD)/turbogear/TGSystem.o $(TGOD)/turbogear/main.o
+TGOBJS = $(SHAREDOBJS) $(TGCOREOBJS) $(TGOD)/turbogear/TurboGear.o $(TGOD)/turbogear/VDPView.o $(TGOD)/turbogear/SDLInput.o $(TGOD)/turbogear/FrameBuffer.o $(TGOD)/turbogear/TGSystem.o $(TGOD)/turbogear/InputBuffer.o $(TGOD)/turbogear/main.o
 
 CFLAGS= -Wall -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I $(SRCDIR) -I $(SRCDIR)/z80ex/include -I $(SRCDIR)/piIo/ 
 CPPFLAGS= -std=c++11 `pkg-config --cflags libconfig++` -I . -I/usr/share/verilator/include

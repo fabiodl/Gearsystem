@@ -6,7 +6,8 @@ TurboGear::TurboGear(TGSystem& tgs):
              &TurboZ::initDeskTop
              ),
   TurboZ(tgs),
-  frameBuffer(tgs.frameBuffer)
+  frameBuffer(tgs.frameBuffer),
+  inputBuffer(tgs.inputBuffer)
 {
   
 }
@@ -19,7 +20,7 @@ void TurboGear::idle(){
     vdpView.draw(frameBuffer.get());
     frameBuffer.release();
   }
-
+  sdlInput.get(inputBuffer);
 }
 
 
