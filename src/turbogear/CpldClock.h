@@ -4,10 +4,9 @@
 
 class CpldClock{
 public:
-  std::function<void()> onTick();
+  std::function<void()> onTick;
   void Tick(unsigned int cpuCycles);
 };
-
 
 
 #endif

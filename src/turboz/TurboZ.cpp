@@ -368,7 +368,7 @@ void TurboZ::handleEvent(TEvent& event){
 	refreshState();
 	break;
       case cmDescribeCartridge:
-	std::cout<<system.rule.describe()<<std::endl;
+	std::cout<<system.rule.describe(0)<<std::endl;
 	break;
       }
     }

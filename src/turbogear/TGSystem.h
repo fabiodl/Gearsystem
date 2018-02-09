@@ -13,7 +13,7 @@
 class TGSystem:public System{
 public:
 enum SystemType{GAMEGEAR,MASTERSYSTEM};
-  Audio audio;
+  //Audio audio;
   Video video;
   Input input;
   CpldClock cpldClock;

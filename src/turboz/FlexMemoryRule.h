@@ -20,7 +20,7 @@ public:
   virtual void PerformWrite(u16 address, u8 value);
   virtual void Reset();  
   void Tick();
-  std::string describe() const;
+  std::string describe(int level) const;
 private:
   void defaultInputs();
   uint8_t sRam[2][16*1024]; 
