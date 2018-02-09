@@ -32,6 +32,7 @@ unsigned int TGSystem::Tick(){
   frameBuffer.release();
   audio.Tick(cpuCycles);
   input.Tick(cpuCycles);
+  cpldClock.Tick(cpuCycles);
   if (vblank){
     audio.EndFrame();
     frameBuffer.setBlanked();

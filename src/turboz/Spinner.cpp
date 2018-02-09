@@ -103,7 +103,7 @@ void Spinner::waitForWork(){
       for (auto c:onHalt){
         c();
       }
-      if (state==working){
+      if (state!=destroyRequested){
 	state=idle;
       }
       cv.notify_all();

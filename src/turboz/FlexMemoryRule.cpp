@@ -122,5 +122,9 @@ void FlexMemoryRule::Reset(){
   m.reset=1;
 }
 
+void FlexMemoryRule::Tick(){
+  m.clk=~m.clk();
+  m.eval();
+}
 
 #endif
