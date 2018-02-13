@@ -46,33 +46,122 @@ std::string FlexMemoryRule::describe(int level) const{
 
 FlexMemoryRule::FlexMemoryRule(Memory* pMemory, FlashCartridge* pCartridge):
   MemoryRule(pMemory,pCartridge),
-  flash(pCartridge)
+  flash(pCartridge),
+  sram(32*1024),ioram(32*1024)
 {
   
 }
+
+
+
+class CheckMultiwrite{
+  const std::string* firstName;
+
+  CheckMultiwrite():firstName(nullptr){}
+public:
+  void add(const std::string& name,bool v){
+    if (v){
+      if (firstName==nullptr){
+        firstName=&name;
+      }else{
+        std::cerr<<"Multiple write! data bus"<<*firstName<<" and "<<name<<std::endl;
+      }
+    }
+  }
+};
+
+
+
+
+void FlexMemoryRule::sanityCheck(){
+  if (m.isBusDataOut){
+    data=m.busDataOut;
+  }
+
+  if (m.bufferCe){
+    CheckMultiwrite mw;
+    mw.add("smsram",0xC000<=address && address<=0XFFFF&&!m.killmem);
+    mw.add("sram",!m.sram_ce&&!m.ram_rd);
+    mw.add("flash",!m.flash_ce&&!m.flash_rd);
+    mw.add("cpld",isBusDataOut);
+    mw.add("cpu",!m._wr);
+    if (m.isBankAddrOut){
+      std::cerr<"Multiple write! address bus"<<std::endl;
+    }
+  }
+
+  
+  if (m.isIoramDataOut&&ioram_rd){
+      std::cerr<"Multiple write! ioram data bus"<<std::endl;
+  }
+  
+
+}
+
+void FlexMemoryRule::exchange(u16 address,u8& data){
+  std::lock_guard<std::mutex> lock(access);
+
+  
+  uint16_t bankAddr=address&((1<<14)-1);
+  uint8_t slotAddr=address>>14;
+  uint8_t ioramData;
+  
+  m.slotAddr=slotAddr;
+  m.bankAddrIn=bankAddr;
+
+  m.miso=PhysicalIo::read();  
+
+  m.eval();//fix the ioramAddr
+
+  ioram.eval(m.ioramAddr,ioramData,true,m.ioram_wr,m.ioram_rd);
+
+  m.eval();
+
+  PhysicalIo::write((m.mosi<<0)+
+                    (m.clk<<1)+
+                    (m.cs<<2)
+                    );
+  
+  if (m.isBankAddrOut){
+    bankAddr=m.bankAddrOut;
+  }
+
+  if (m.isBusDataOut){
+    data=busDataOut;
+  }
+
+  uint32_t flashFullAddr=
+    (m.flashUHaddr<<(14+6))+
+    (m.flashHaddr<<14)+
+    bankAddr;
+  
+  flash->eval(flashFullAddr,data,m.flash_ce,m.flash_wr,m._rd);
+
+  uint32_t sramFullAddr=(m.sramHaddr<<14)+bankAddr;
+
+  sram.eval(sramFullAddr,data,m.sram_ce,m._wr,m._rd);
+  ioram.eval(m.ioramAddr,ioramData,true,m.ioram_wr,m.ioram_rd);
+
+
+  sanityCheck();
+
+}
+
 
 void FlexMemoryRule::defaultInputs(){
   m._mreq=0;
   m._ce=0;
   m._unlockOnPause=1;
-  m.miso=PhysicalIo::read();  
+
 }
 
 
 u8 FlexMemoryRule::PerformRead(u16 address){
-  uint16_t bankAddr=address&((1<<14)-1);
-  bool isBank3=0xC000<=address && address<=0XFFFF;
-  
-  std::lock_guard<std::mutex> lock(access);
-  defaultInputs();
-  m.slotAddr=address>>14;
-  m.bankAddr=address&bankAddr;
+  uint8_t data;
   m._rd=0;
   m._wr=1;
-  m.eval();
-  //cout<<"read from "<<hex<<address<<dec<<endl;
-  //  printState();
-  
+  exchange(address,data);
+  return data;
 
   
 
@@ -143,6 +232,26 @@ void FlexMemoryRule::Tick(){
   std::lock_guard<std::mutex> lock(access);
   m.cpldClk=~m.cpldClk;
   m.eval();
+}
+
+
+
+FlexMemoryRule::Sram::Sram(size_t size):mem(size){}
+
+void FlexMemoryRule::Sram::eval(uint32_t addr,uint8_t &data,bool _ce,bool _we,bool _oe){
+  if (_ce){
+    return;
+  }
+  if (!_oe && !_we){
+    std::cerr<<"SRAM memory has simulataneously _oe and _we low"<<std::endl;
+  }
+  if (!_we){
+    mem[addr]=data;
+  }
+  if (!_oe){
+    data=mem[addr];
+  }
+      
 }
 
 #endif

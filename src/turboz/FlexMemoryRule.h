@@ -23,7 +23,17 @@ public:
   std::string describe(int level) const;
 private:
   void defaultInputs();
-  uint8_t sRam[2][16*1024]; 
+  void exchange(u16 address,u8& data);
+  void sanityCheck();
+  class Sram{
+    std::vector<uint8_t> mem;
+  public:
+    Sram(size_t size);
+    void eval(uint32_t addr,uint8_t &data,bool _ce,bool _we,bool _oe);
+  };
+
+  Sram sram,ioram;
+
   std::mutex access;
   FlashMemory* flash;
 };
