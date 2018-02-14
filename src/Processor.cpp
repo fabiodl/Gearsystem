@@ -89,7 +89,8 @@ void Processor::SetIOPorts(IOPorts* pIOPorts)
 unsigned int Processor::Tick()
 {
     m_iTStates = 0;
-    
+    /*uint16_t addr=PC.GetValue();
+      printf("PC %04x [%02x,%02x,%02x]\n",addr,m_pMemory->Read(addr),m_pMemory->Read(addr+1),m_pMemory->Read(addr+2));*/
     if (!m_bInputLastCycle)
     {
         if (m_bNMIRequested)

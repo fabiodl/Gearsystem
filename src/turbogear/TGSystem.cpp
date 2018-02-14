@@ -52,6 +52,7 @@ unsigned int TGSystem::Tick(){
   input.Tick(cpuCycles);
   cpldClock.Tick(cpuCycles);
   if (vblank){
+    //    std::cout<<"vblank arrived"<<std::endl;
     //audio.EndFrame();
     frameBuffer.setBlanked();
   }

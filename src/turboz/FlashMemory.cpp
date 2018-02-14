@@ -107,7 +107,11 @@ void FlashMemory::eval(uint32_t addr,uint8_t& datalines,bool _ce,bool _we,bool _
     std::cerr<<"Flash memory has simulataneously _oe and _we low"<<std::endl;
   }
   if (!_oe){
-    if (addr>data.size()){
+    if (!data.size()){
+      datalines=0;
+      return;
+    }
+    if (addr>=data.size()){
       std::cerr<<"warning: address "<<addr<<" > size "<<data.size()<<std::endl;
       addr=addr%data.size();
     }

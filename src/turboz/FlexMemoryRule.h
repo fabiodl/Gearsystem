@@ -10,6 +10,7 @@
 
 #include "MemoryRule.h"
 #include "FlashCartridge.h"
+#include "Sram.h"
 #include <mutex>
 
 class FlexMemoryRule : public MemoryRule
@@ -23,19 +24,12 @@ public:
   std::string describe(int level) const;
 private:
   void defaultInputs();
-  void exchange(u16 address,u8& data);
+  void eval(u16 address,u8& data,u8& ioramData);
   void sanityCheck();
-  class Sram{
-    std::vector<uint8_t> mem;
-  public:
-    Sram(size_t size);
-    void eval(uint32_t addr,uint8_t &data,bool _ce,bool _we,bool _oe);
-  };
-
-  Sram sram,ioram;
 
   std::mutex access;
   FlashMemory* flash;
+  Sram sram,ioram,onboardRam;
 };
 
 #endif
