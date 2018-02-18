@@ -3,7 +3,7 @@ import re
 
 def getNames():
     names = []
-    blacklist = ("VL_MODULE", "VL_ATTR_ALIGNED")
+    blacklist = ("VL_MODULE", "VL_ATTR_ALIGNED", "Vtop", "VL_DEBUG")
     with open("mapper/obj_dir/Vtop.h") as f:
         lines = f.readlines()
         for line in lines:

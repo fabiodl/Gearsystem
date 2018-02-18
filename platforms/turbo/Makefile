@@ -17,9 +17,11 @@ TGCOREOBJS = $(TGOD)/Audio.o $(TGOD)/audio/Sms_Apu.o $(TGOD)/audio/Sound_Queue.o
 
 TGOBJS = $(SHAREDOBJS) $(TGCOREOBJS) $(TGOD)/turbogear/TurboGear.o $(TGOD)/turbogear/VDPView.o $(TGOD)/turbogear/SDLInput.o $(TGOD)/turbogear/FrameBuffer.o $(TGOD)/turbogear/TGSystem.o $(TGOD)/turbogear/InputBuffer.o $(TGOD)/turbogear/main.o $(TGOD)/turbogear/CpldClock.o
 
+VERILATORINCLUDE= /usr/local/share/verilator/include
+
 CFLAGS= -Wall -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I $(SRCDIR) -I $(SRCDIR)/z80ex/include -I $(SRCDIR)/piIo/ 
-CPPFLAGS= -std=c++11 `pkg-config --cflags libconfig++` -I . -I/usr/share/verilator/include
-LDFLAGS= -lrhtv -pthread `pkg-config --libs libconfig++` /usr/share/verilator/include/verilated.cpp
+CPPFLAGS= -std=c++11 `pkg-config --cflags libconfig++` -I . -I $(VERILATORINCLUDE)
+LDFLAGS= -lrhtv -pthread `pkg-config --libs libconfig++` $(VERILATORINCLUDE)/verilated.cpp
 
 
 TGCFLAGS = $(CFLAGS) -I $(SRCDIR)/turboz
@@ -45,8 +47,9 @@ turboz: $(MAPPER)/obj_dir/Vtop.h $(TZOBJS)
 
 
 $(OD)/%.o: $(SRCDIR)/%.cpp
-	g++ $(CFLAGS) $(CPPFLAGS) -g -c -o $@ $<
 	g++ -MM $(CFLAGS) $(CPPFLAGS) $< -MF $(@:.o=.d) -MT $@
+	g++ $(CFLAGS) $(CPPFLAGS) -g -c -o $@ $<
+
 
 $(OD)/z80ex/%.o: $(SRCDIR)/z80ex/%.c
 	gcc $(CFLAGS) -g -c -o $@ $< -I $(SRCDIR)/z80ex/include
@@ -62,9 +65,16 @@ $(OD)/piIo.o: $(SRCDIR)/piIo/piIo.c
 	gcc -MM $(CFLAGS) $< -MF $(@:.o=.d) -MT $@ -I $(SRCDIR)/piIo
 
 
+$(OD)/turboz/FlexMemoryRule.o: $(SRCDIR)/turboz/FlexMemoryRule.cpp $(MAPPER)/obj_dir/VtopPrinter.h
+	g++ -MM $(CFLAGS) $(CPPFLAGS) $< -MF $(@:.o=.d) -MT $@
+	g++ $(CFLAGS) $(CPPFLAGS) -g -c -o $@ $<
+
+$(MAPPER)/obj_dir/VtopPrinter.h: $(MAPPER)/obj_dir/Vtop.cpp
+	python makeDescription.py
+
+
 $(MAPPER)/obj_dir/Vtop.h: $(MAPPER)/*.v 
 	cd mapper;verilator --cc top.v;
-	python makeDescription.py
 
 $(MAPPER)/obj_dir/Vtop.cpp: $(MAPPER)/*.v 
 	cd mapper;verilator --cc top.v
@@ -77,4 +87,5 @@ buildDir:
 	mkdir -p tgbuild/audio
 	mkdir -p tgbuild/turbogear
 clean:
-	rm -r build ./turboz
+	-rm -rf build tgbuild ./turboz
+
