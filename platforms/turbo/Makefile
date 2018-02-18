@@ -47,8 +47,9 @@ turboz: $(MAPPER)/obj_dir/Vtop.h $(TZOBJS)
 
 
 $(OD)/%.o: $(SRCDIR)/%.cpp
-	g++ -MM $(CFLAGS) $(CPPFLAGS) $< -MF $(@:.o=.d) -MT $@
-	g++ $(CFLAGS) $(CPPFLAGS) -g -c -o $@ $<
+	g++ $(CFLAGS) $(CPPFLAGS) -g -c -o $@ $<	
+	g++ -MM $(CFLAGS) $(CPPFLAGS) $< -MF $(@:.o=.d) -MT $@	
+
 
 
 $(OD)/z80ex/%.o: $(SRCDIR)/z80ex/%.c
