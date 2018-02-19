@@ -47,7 +47,12 @@ std::string FlexMemoryRule::describe(int level) const{
 FlexMemoryRule::FlexMemoryRule(Memory* pMemory, FlashCartridge* pCartridge):
   MemoryRule(pMemory,pCartridge),
   flash(pCartridge),
-  sram(32*1024),ioram(32*1024),onboardRam(8*1024)
+  sram(32*1024),ioram(32*1024),onboardRam(8*1024),
+  sramIf(sram.getRaw(),sram.size()),
+  ioramIf(ioram.getRaw(),ioram.size()),
+  onboardIf(onboardRam.getRaw(),onboardRam.size()),
+  flashIf([this](){return flash->GetROM();},[this](){return flash->GetROMSize();}),
+  addrIf(this)
 {
   Reset();
 }
@@ -189,6 +194,9 @@ void FlexMemoryRule::Tick(){
 }
 
 
-
+void FlexMemoryRule::ToggleMenu(){
+  std::lock_guard<std::mutex> lock(access);
+  m._unlockOnPause=!m._unlockOnPause;
+}
 
 #endif

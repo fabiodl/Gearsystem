@@ -38,18 +38,38 @@ static const char* CFG_LASTBREAKPOINTS="breakpoints";
 static const char* CFG_PALETTE="palette";
 
 
+template <typename T> struct WinType{
+  typedef T value_type;
+  typedef ObjectTracker<T,0> Tracker;
+};
+
+template <typename T,int ID> struct WinInstance{
+};
+
+template <typename T,int ID> struct WinType<WinInstance<T,ID> >{
+  typedef T value_type;
+  typedef ObjectTracker<T,ID> Tracker;
+};
+
+
 template<typename Window> class WindowFactory{
 public:
   static void addWindow(TGroup* g,TurboZ* turboz);
   static void showWindow(TGroup* g,TurboZ* turboz);
   static TRect initPos;
-private:
-  static Window* getWindow(TurboZ* turboz);
+protected:
+  static typename WinType<Window>::value_type * getWindow(TurboZ* turboz);
   static TRect getPos();
 };
 
 
-
+enum MemoryWindows{
+  ADDRSPACE,
+  SRAM,
+  IORAM,
+  ONBOARD,
+  FLASH
+};
 
 
 Placer winPlacer(0,0);
@@ -57,30 +77,37 @@ template<> TRect WindowFactory<ProcessorWindow>::initPos(winPlacer.place(15,12,t
 template<> TRect WindowFactory<ExecutionWindow>::initPos(winPlacer.spaceAndPlace(0,1,21,14));
 template<> TRect WindowFactory<DisassemblyWindow>::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,60,20),5,0) );
 
-template<> TRect WindowFactory<MemoryWindow>::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),7,2) );
+template<> TRect WindowFactory<WinInstance<MemoryWindow,ADDRSPACE> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),7,2) );
+template<> TRect WindowFactory<WinInstance<MemoryWindow,SRAM> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),9,2) );
+
+template<> TRect WindowFactory<WinInstance<MemoryWindow,IORAM> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),11,2) );
+template<> TRect WindowFactory<WinInstance<MemoryWindow,ONBOARD> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),13,2) );
+template<> TRect WindowFactory<WinInstance<MemoryWindow,FLASH> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),15,2) );
+
 
 template<> TRect WindowFactory<SymbolWindow>::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,20,20),9,4) );
 
 
 template<typename Window>
-void WindowFactory<Window>::addWindow(TGroup* g,TurboZ* turboz){
-  Window* win=getWindow(turboz);
+void WindowFactory<Window>::addWindow(TGroup* g,TurboZ* turboz){  
+  typename WinType<Window>::value_type * win=getWindow(turboz);
   g->insert(win);
-  ObjectTracker<Window>::objs.push_back(win);
+  WinType<Window>::Tracker::objs.push_back(win);
 }
 
 template<typename Window>
 TRect WindowFactory<Window>::getPos(){
   TRect p(initPos);
-  p.move(ObjectTracker<Window>::objs.size(),ObjectTracker<Window>::objs.size());
+  size_t delta=WinType<Window>::Tracker::objs.size();
+  p.move(delta,delta);
   return p;
 }
 
 
 template<typename Window>
 void WindowFactory<Window>::showWindow(TGroup* g,TurboZ* turboz){
-  if (ObjectTracker<Window>::objs.size()){
-    TView* win=ObjectTracker<Window>::objs.back();
+  if (WinType<Window>::Tracker::objs.size()){
+    TView* win=WinType<Window>::Tracker::objs.back();
     g->setCurrent(win,TGroup::normalSelect);
     win->putInFrontOf(g->first());
   }else{
@@ -106,9 +133,28 @@ template<> DisassemblyWindow* WindowFactory<DisassemblyWindow>::getWindow(TurboZ
 }
 
 
-template<> MemoryWindow* WindowFactory<MemoryWindow>::getWindow(TurboZ* turboz){
-  return new MemoryWindow(getPos(),turboz->system);
+
+template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,ADDRSPACE> >::getWindow(TurboZ* turboz){
+  return new MemoryWindow(getPos(),"Memory",turboz->system.rule.addrIf,turboz->system.addrFind);
 }
+
+template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,SRAM> >::getWindow(TurboZ* turboz){
+  return new MemoryWindow(getPos(),"Sram",turboz->system.rule.sramIf,turboz->system.addrFind);
+}
+
+template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,IORAM> >::getWindow(TurboZ* turboz){
+  return new MemoryWindow(getPos(),"ioram",turboz->system.rule.ioramIf,turboz->system.addrFind);
+}
+
+template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,ONBOARD> >::getWindow(TurboZ* turboz){
+  return new MemoryWindow(getPos(),"Board",turboz->system.rule.onboardIf,turboz->system.addrFind);
+}
+
+template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,FLASH> >::getWindow(TurboZ* turboz){
+  return new MemoryWindow(getPos(),"Flash",turboz->system.rule.flashIf,turboz->system.addrFind);
+}
+
+
 
 
 template<> SymbolWindow* WindowFactory<SymbolWindow>::getWindow(TurboZ* turboz){
@@ -320,7 +366,19 @@ void TurboZ::handleEvent(TEvent& event){
         clearEvent(event);
         break;
       case cmAddMemoryWindow:
-        addWindow<MemoryWindow>();
+        addWindow<WinInstance<MemoryWindow,ADDRSPACE> >();
+        clearEvent(event);
+        break;
+      case cmShowSramWindow:
+        showWindow<WinInstance<MemoryWindow,SRAM> >();
+        clearEvent(event);
+        break;
+      case cmShowIoramWindow:
+        showWindow<WinInstance<MemoryWindow,IORAM> >();
+        clearEvent(event);
+        break;
+      case cmShowFlashWindow:
+        showWindow<WinInstance<MemoryWindow,FLASH> >();
         clearEvent(event);
         break;
       case cmShowSymbolWindow:
@@ -357,6 +415,10 @@ void TurboZ::handleEvent(TEvent& event){
         break;
       case cmResetCartridge:
         system.rule.Reset();
+        refreshState();
+        break;
+      case cmToggleCartridgeMenu:
+        system.rule.ToggleMenu();
         refreshState();
         break;
       case cmBreakpointsClear:
@@ -409,6 +471,9 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
      *new TMenuItem( "~C~pu", cmShowProcessorWindow,  kbAltC, hcNoContext, "" )+
      *new TMenuItem( "~D~isassembly", cmAddDisassemblyWindow,  kbAltD, hcNoContext, "" )+
      *new TMenuItem( "~M~em", cmAddMemoryWindow,  kbAltM, hcNoContext, "" )+
+     *new TMenuItem( "Sram", cmShowSramWindow,  kbNoKey, hcNoContext, "" )+
+     *new TMenuItem( "Ioram", cmShowIoramWindow,  kbNoKey, hcNoContext, "" )+
+     *new TMenuItem( "Flash", cmShowFlashWindow,  kbNoKey, hcNoContext, "" )+
      *new TMenuItem( "~E~xecution", cmShowExecutionWindow,  kbAltE, hcNoContext, "" )+
      
      *new TSubMenu("RAM",kbNoKey)+
@@ -420,6 +485,7 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
 
      *new TSubMenu("Cartridge",kbNoKey)+
      *new TMenuItem("Reset",cmResetCartridge,kbNoKey,hcNoContext,"")+
+     *new TMenuItem("ToggleMenu",cmToggleCartridgeMenu,kbNoKey,hcNoContext,"")+
      *new TMenuItem("Info",cmDescribeCartridge,kbNoKey,hcNoContext,"")+
 
      *new TSubMenu("Breakpt",kbNoKey)+

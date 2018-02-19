@@ -7,11 +7,12 @@
 #ifndef _FLEXMEMORYRULE_H_
 #define	_FLEXMEMORYRULE_H_
 
-
+#include "MemoryInterface.h"
 #include "MemoryRule.h"
 #include "FlashCartridge.h"
 #include "Sram.h"
 #include <mutex>
+
 
 class FlexMemoryRule : public MemoryRule
 {
@@ -22,6 +23,7 @@ public:
   virtual void Reset();  
   void Tick();
   std::string describe(int level) const;
+  void ToggleMenu();
 private:
   void defaultInputs();
   void eval(u16 address,u8& data,u8& ioramData);
@@ -30,6 +32,10 @@ private:
   std::mutex access;
   FlashMemory* flash;
   Sram sram,ioram,onboardRam;
+public:
+  RawMemoryInterface sramIf,ioramIf,onboardIf;
+  LambdaMemoryInterface flashIf;
+  AddrspaceInterface addrIf;
 };
 
 #endif

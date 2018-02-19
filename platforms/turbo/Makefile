@@ -6,7 +6,7 @@ MAPPER=mapper
 
 COREOBJS= $(OD)/Processor.o $(OD)/Memory.o  $(OD)/Cartridge.o $(OD)/MemoryRule.o  $(OD)/opcodes.o $(OD)/opcodes_cb.o $(OD)/opcodes_ed.o
 DISOBJS=  $(OD)/z80ex/z80ex_dasm.o
-TURBOOBJS= $(TOD)/FlexMemoryRule.o $(TOD)/PhysicalIo.o $(TOD)/Symbols.o $(TOD)/Disassembly.o $(TOD)/System.o $(TOD)/Placer.o $(TOD)/ProcessorWindow.o $(TOD)/Spinner.o $(TOD)/ExecutionWindow.o $(TOD)/HardwareCondition.o $(TOD)/TDynamicScrollBar.o $(TOD)/TDynamicInputLine.o $(TOD)/ProcessorSymbols.o $(TOD)/AddressFinder.o $(TOD)/Breakpoints.o $(TOD)/GoToDialog.o $(TOD)/BreakpointDialog.o $(TOD)/AddressableWindow.o $(TOD)/DisassemblyWindow.o $(TOD)/MemoryWindow.o $(TOD)/TExistingFileDialog.o  $(TOD)/SymbolWindow.o $(TOD)/LoadRamDialog.o $(TOD)/TurboZ.o $(TOD)/FlashMemory.o $(TOD)/Sram.o $(TOD)/sdCard.o
+TURBOOBJS= $(TOD)/FlexMemoryRule.o $(TOD)/MemoryInterface.o $(TOD)/PhysicalIo.o $(TOD)/Symbols.o $(TOD)/Disassembly.o $(TOD)/System.o $(TOD)/Placer.o $(TOD)/ProcessorWindow.o $(TOD)/Spinner.o $(TOD)/ExecutionWindow.o $(TOD)/HardwareCondition.o $(TOD)/TDynamicScrollBar.o $(TOD)/TDynamicInputLine.o $(TOD)/ProcessorSymbols.o $(TOD)/AddressFinder.o $(TOD)/Breakpoints.o $(TOD)/GoToDialog.o $(TOD)/BreakpointDialog.o $(TOD)/AddressableWindow.o $(TOD)/DisassemblyWindow.o $(TOD)/MemoryWindow.o $(TOD)/TExistingFileDialog.o  $(TOD)/SymbolWindow.o $(TOD)/LoadRamDialog.o $(TOD)/TurboZ.o $(TOD)/FlashMemory.o $(TOD)/Sram.o $(TOD)/sdCard.o
 MAPPEROBJS = $(MAPPER)/obj_dir/Vtop.o $(MAPPER)/obj_dir/Vtop__Syms.o 
 
 SHAREDOBJS= $(COREOBJS) $(TURBOOBJS) $(DISOBJS) $(MAPPEROBJS)
@@ -17,7 +17,7 @@ TGCOREOBJS = $(TGOD)/Audio.o $(TGOD)/audio/Sms_Apu.o $(TGOD)/audio/Sound_Queue.o
 
 TGOBJS = $(SHAREDOBJS) $(TGCOREOBJS) $(TGOD)/turbogear/TurboGear.o $(TGOD)/turbogear/VDPView.o $(TGOD)/turbogear/SDLInput.o $(TGOD)/turbogear/FrameBuffer.o $(TGOD)/turbogear/TGSystem.o $(TGOD)/turbogear/InputBuffer.o $(TGOD)/turbogear/main.o $(TGOD)/turbogear/CpldClock.o
 
-VERILATORINCLUDE= /usr/local/share/verilator/include
+VERILATORINCLUDE= /usr/share/verilator/include
 
 CFLAGS= -Wall -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I $(SRCDIR) -I $(SRCDIR)/z80ex/include -I $(SRCDIR)/piIo/ 
 CPPFLAGS= -std=c++11 `pkg-config --cflags libconfig++` -I . -I $(VERILATORINCLUDE)

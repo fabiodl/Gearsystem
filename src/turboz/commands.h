@@ -8,6 +8,9 @@ enum Commands{
   cmShowSymbolWindow,
   cmAddDisassemblyWindow,
   cmAddMemoryWindow,
+  cmShowSramWindow,
+  cmShowIoramWindow,
+  cmShowFlashWindow,
   cmRefreshState,
   cmRefreshSymbols,
   cmOptionDialog,
@@ -24,6 +27,7 @@ enum Commands{
   cmResetRam,
   cmResetDisasm,
   cmResetCartridge,
+  cmToggleCartridgeMenu,
   cmBreakpointsClear,
   cmBreakpointsReload,  
   cmDescribeCartridge

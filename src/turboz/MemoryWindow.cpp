@@ -7,14 +7,16 @@
 #include "ClippedString.h"
 #include "commands.h"
 
-MemoryWindow::MemoryWindow(const TRect& bounds,System& _sys):
+MemoryWindow::MemoryWindow(const TRect& bounds,const std::string& _title,MemoryInterface& _mem,AddressFinder& _addrFind):
   TWindowInit( &MemoryWindow::initFrame ),
-  AddressableWindow(bounds,"Memory000x",_sys.addrFind),
+  AddressableWindow(bounds,"      000x",_addrFind),
   format(Hex),
-  sys(_sys)
+  mem(_mem),
+  addrFind(_addrFind)
 {
   scroller->setLimit(80,0x10000/16+1);
-  windowCommands.enableCmd(cmCycleFormat);
+  windowCommands.enableCmd(cmCycleFormat);    
+  memcpy(const_cast<char*>(title),_title.c_str(),(std::min)((size_t)6,_title.length()));
 }
 
 
@@ -79,7 +81,7 @@ void MemoryWindow::generateContent(TView& sink,TPoint& delta,TPoint& size){
     int addr = scrollToAddr(delta.y + i);       // delta is scroller offset          
     sprintf(buffer,"%03X ",delta.y+i);    
     for (int i=0;i<0x10;i++){
-      sprintf(buffer+4+i*width,formatString,sys.memory.Read(addr+i));
+      sprintf(buffer+4+i*width,formatString,mem.Read(addr+i));
     }
     ::writeLine(sink,i+1,buffer,color,delta,size);
     
