@@ -6,12 +6,13 @@
 
 #ifndef _FLEXMEMORYRULE_H_
 #define	_FLEXMEMORYRULE_H_
-
+#include <mutex>
 #include "MemoryInterface.h"
 #include "MemoryRule.h"
 #include "FlashCartridge.h"
 #include "Sram.h"
-#include <mutex>
+#include "Tracker.h"
+
 
 
 class FlexMemoryRule : public MemoryRule
@@ -36,6 +37,7 @@ public:
   RawMemoryInterface sramIf,ioramIf,onboardIf;
   LambdaMemoryInterface flashIf;
   AddrspaceInterface addrIf;
+  WriteTracker onboardTracker;
 };
 
 #endif

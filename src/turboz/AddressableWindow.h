@@ -12,7 +12,7 @@
 class AddressableWindow:public TWindow{
 public:
   AddressableWindow(const TRect& bounds,const char* title,AddressFinder& addrFind);
-  virtual void updateTitle(uint16_t addr);
+  virtual void updateTitle(size_t addr);
   void scrollTo(uint16_t addr);
   void setState(ushort aState,Boolean enable);
   void showGoToDialog();
@@ -21,8 +21,8 @@ public:
 protected:
   TCommandSet windowCommands;
   AddressFinder& addrFind;
-  virtual int addrToScroll(uint16_t addr);
-  virtual uint16_t scrollToAddr(int scroll);
+  virtual int addrToScroll(size_t addr);
+  virtual size_t scrollToAddr(int scroll);
   TScroller* scroller;
 private:
   TDynamicScrollBar* vScrollBar;

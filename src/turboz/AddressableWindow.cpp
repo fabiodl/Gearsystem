@@ -75,17 +75,17 @@ AddressableWindow:: AddressableWindow(const TRect& bounds,const char* title,Addr
   
 }
 
-void AddressableWindow::updateTitle(uint16_t addr){
-  sprintf(const_cast<char*>(title)+strlen(title)-4,"%04X",addr);
+void AddressableWindow::updateTitle(size_t addr){
+  sprintf(const_cast<char*>(title)+strlen(title)-4,"%04lX",addr);
   frame->drawView();
 }
 
 
-int AddressableWindow::addrToScroll(uint16_t addr){
+int AddressableWindow::addrToScroll(size_t addr){
   return addr;
 }
 
-uint16_t AddressableWindow::scrollToAddr(int scroll){
+size_t AddressableWindow::scrollToAddr(int scroll){
   return scroll;
 }
 

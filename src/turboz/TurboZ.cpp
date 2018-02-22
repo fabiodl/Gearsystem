@@ -38,19 +38,6 @@ static const char* CFG_LASTBREAKPOINTS="breakpoints";
 static const char* CFG_PALETTE="palette";
 
 
-template <typename T> struct WinType{
-  typedef T value_type;
-  typedef ObjectTracker<T,0> Tracker;
-};
-
-template <typename T,int ID> struct WinInstance{
-};
-
-template <typename T,int ID> struct WinType<WinInstance<T,ID> >{
-  typedef T value_type;
-  typedef ObjectTracker<T,ID> Tracker;
-};
-
 
 template<typename Window> class WindowFactory{
 public:
@@ -58,7 +45,7 @@ public:
   static void showWindow(TGroup* g,TurboZ* turboz);
   static TRect initPos;
 protected:
-  static typename WinType<Window>::value_type * getWindow(TurboZ* turboz);
+  static Window* getWindow(TurboZ* turboz);
   static TRect getPos();
 };
 
@@ -73,16 +60,19 @@ enum MemoryWindows{
 
 
 Placer winPlacer(0,0);
+
+template <int ID> using MemWin = TrackedMemoryWindow<ID>;
+
 template<> TRect WindowFactory<ProcessorWindow>::initPos(winPlacer.place(15,12,true));
 template<> TRect WindowFactory<ExecutionWindow>::initPos(winPlacer.spaceAndPlace(0,1,21,14));
 template<> TRect WindowFactory<DisassemblyWindow>::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,60,20),5,0) );
 
-template<> TRect WindowFactory<WinInstance<MemoryWindow,ADDRSPACE> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),7,2) );
-template<> TRect WindowFactory<WinInstance<MemoryWindow,SRAM> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),9,2) );
+template<> TRect WindowFactory<MemWin<ADDRSPACE> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),7,2) );
+template<> TRect WindowFactory<MemWin<SRAM> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),9,2) );
 
-template<> TRect WindowFactory<WinInstance<MemoryWindow,IORAM> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),11,2) );
-template<> TRect WindowFactory<WinInstance<MemoryWindow,ONBOARD> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),13,2) );
-template<> TRect WindowFactory<WinInstance<MemoryWindow,FLASH> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),15,2) );
+template<> TRect WindowFactory<MemWin<IORAM> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),11,2) );
+template<> TRect WindowFactory<MemWin<ONBOARD> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),13,2) );
+template<> TRect WindowFactory<MemWin<FLASH> >::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,70,20),15,2) );
 
 
 template<> TRect WindowFactory<SymbolWindow>::initPos(Placer::move(Placer::rightOf(WindowFactory<ProcessorWindow>::initPos,20,20),9,4) );
@@ -90,15 +80,14 @@ template<> TRect WindowFactory<SymbolWindow>::initPos(Placer::move(Placer::right
 
 template<typename Window>
 void WindowFactory<Window>::addWindow(TGroup* g,TurboZ* turboz){  
-  typename WinType<Window>::value_type * win=getWindow(turboz);
+  Window * win=getWindow(turboz);
   g->insert(win);
-  WinType<Window>::Tracker::objs.push_back(win);
 }
 
 template<typename Window>
 TRect WindowFactory<Window>::getPos(){
   TRect p(initPos);
-  size_t delta=WinType<Window>::Tracker::objs.size();
+  size_t delta=ObjectTracker<Window>::objs.size();
   p.move(delta,delta);
   return p;
 }
@@ -106,8 +95,8 @@ TRect WindowFactory<Window>::getPos(){
 
 template<typename Window>
 void WindowFactory<Window>::showWindow(TGroup* g,TurboZ* turboz){
-  if (WinType<Window>::Tracker::objs.size()){
-    TView* win=WinType<Window>::Tracker::objs.back();
+  if (ObjectTracker<Window>::objs.size()){
+    TView* win=ObjectTracker<Window>::objs.back();
     g->setCurrent(win,TGroup::normalSelect);
     win->putInFrontOf(g->first());
   }else{
@@ -134,24 +123,24 @@ template<> DisassemblyWindow* WindowFactory<DisassemblyWindow>::getWindow(TurboZ
 
 
 
-template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,ADDRSPACE> >::getWindow(TurboZ* turboz){
-  return new MemoryWindow(getPos(),"Memory",turboz->system.rule.addrIf,turboz->system.addrFind);
+template<> MemWin<ADDRSPACE>* WindowFactory<MemWin<ADDRSPACE> >::getWindow(TurboZ* turboz){
+  return new MemWin<ADDRSPACE>(getPos(),"Memory",turboz->system.rule.addrIf,turboz->system.addrFind);
 }
 
-template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,SRAM> >::getWindow(TurboZ* turboz){
-  return new MemoryWindow(getPos(),"Sram",turboz->system.rule.sramIf,turboz->system.addrFind);
+template<> MemWin<SRAM>* WindowFactory<MemWin<SRAM> >::getWindow(TurboZ* turboz){
+  return new MemWin<SRAM>(getPos(),"Sram",turboz->system.rule.sramIf,turboz->system.addrFind);
 }
 
-template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,IORAM> >::getWindow(TurboZ* turboz){
-  return new MemoryWindow(getPos(),"ioram",turboz->system.rule.ioramIf,turboz->system.addrFind);
+template<> MemWin<IORAM>* WindowFactory<MemWin<IORAM> >::getWindow(TurboZ* turboz){
+  return new MemWin<IORAM>(getPos(),"ioram",turboz->system.rule.ioramIf,turboz->system.addrFind);
 }
 
-template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,ONBOARD> >::getWindow(TurboZ* turboz){
-  return new MemoryWindow(getPos(),"Board",turboz->system.rule.onboardIf,turboz->system.addrFind);
+template<> MemWin<ONBOARD>* WindowFactory<MemWin<ONBOARD> >::getWindow(TurboZ* turboz){
+  return new MemWin<ONBOARD>(getPos(),"Board",turboz->system.rule.onboardIf,turboz->system.addrFind);
 }
 
-template<> MemoryWindow* WindowFactory<WinInstance<MemoryWindow,FLASH> >::getWindow(TurboZ* turboz){
-  return new MemoryWindow(getPos(),"Flash",turboz->system.rule.flashIf,turboz->system.addrFind);
+template<> MemWin<FLASH>* WindowFactory<MemWin<FLASH> >::getWindow(TurboZ* turboz){
+  return new MemWin<FLASH>(getPos(),"Flash",turboz->system.rule.flashIf,turboz->system.addrFind);
 }
 
 
@@ -349,6 +338,25 @@ void TurboZ::saveRam(){
 }
 
 
+void TurboZ::cliStub(){
+  std::cout<<"Enter command:"<<std::flush;
+  std::string cmd;
+  std::cin>>cmd;
+
+  std::map<std::string,std::function<void()> > actions;
+  actions["on"]=[this](){system.rule.onboardTracker.setEnable(true);};
+  actions["off"]=[this](){system.rule.onboardTracker.setEnable(false);};
+  actions["print"]=[this](){system.rule.onboardTracker.printLast();};
+  actions["ranges"]=[this](){system.rule.onboardTracker.printRanges();};
+  auto l=actions.find(cmd);
+  if (l==actions.end()){
+    std::cout<<"Unknown command ["<<cmd<<"]"<<std::endl;
+  }else{
+    l->second();
+    std::cout<<"ok"<<std::endl;
+  }
+}
+
 void TurboZ::handleEvent(TEvent& event){
   try{
     if (event.what==evCommand){
@@ -366,19 +374,19 @@ void TurboZ::handleEvent(TEvent& event){
         clearEvent(event);
         break;
       case cmAddMemoryWindow:
-        addWindow<WinInstance<MemoryWindow,ADDRSPACE> >();
+        addWindow<MemWin<ADDRSPACE> >();
         clearEvent(event);
         break;
       case cmShowSramWindow:
-        showWindow<WinInstance<MemoryWindow,SRAM> >();
+        showWindow<MemWin<SRAM> >();
         clearEvent(event);
         break;
       case cmShowIoramWindow:
-        showWindow<WinInstance<MemoryWindow,IORAM> >();
+        showWindow<MemWin<IORAM> >();
         clearEvent(event);
         break;
       case cmShowFlashWindow:
-        showWindow<WinInstance<MemoryWindow,FLASH> >();
+        showWindow<MemWin<FLASH> >();
         clearEvent(event);
         break;
       case cmShowSymbolWindow:
@@ -432,6 +440,9 @@ void TurboZ::handleEvent(TEvent& event){
       case cmDescribeCartridge:
 	std::cout<<system.rule.describe(0)<<std::endl;
 	break;
+      case cmShowCliWindow:
+        cliStub();
+        break;
       }
     }
     TApplication::handleEvent(event);
@@ -471,10 +482,11 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
      *new TMenuItem( "~C~pu", cmShowProcessorWindow,  kbAltC, hcNoContext, "" )+
      *new TMenuItem( "~D~isassembly", cmAddDisassemblyWindow,  kbAltD, hcNoContext, "" )+
      *new TMenuItem( "~M~em", cmAddMemoryWindow,  kbAltM, hcNoContext, "" )+
-     *new TMenuItem( "Sram", cmShowSramWindow,  kbNoKey, hcNoContext, "" )+
-     *new TMenuItem( "Ioram", cmShowIoramWindow,  kbNoKey, hcNoContext, "" )+
-     *new TMenuItem( "Flash", cmShowFlashWindow,  kbNoKey, hcNoContext, "" )+
+     *new TMenuItem( "~S~ram", cmShowSramWindow,  kbNoKey, hcNoContext, "" )+
+     *new TMenuItem( "~I~oram", cmShowIoramWindow,  kbNoKey, hcNoContext, "" )+
+     *new TMenuItem( "~F~lash", cmShowFlashWindow,  kbNoKey, hcNoContext, "" )+
      *new TMenuItem( "~E~xecution", cmShowExecutionWindow,  kbAltE, hcNoContext, "" )+
+     *new TMenuItem( "C~L~I", cmShowCliWindow,  kbF9, hcNoContext, "F9" )+
      
      *new TSubMenu("RAM",kbNoKey)+
      *new TMenuItem("Load",cmLoadRam,kbNoKey,hcNoContext,"")+
@@ -741,3 +753,6 @@ void TurboZ::onExit(){
 TurboZ::~TurboZ(){
   onExit();
 }
+
+
+

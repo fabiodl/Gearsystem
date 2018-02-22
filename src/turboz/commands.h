@@ -11,6 +11,7 @@ enum Commands{
   cmShowSramWindow,
   cmShowIoramWindow,
   cmShowFlashWindow,
+  cmShowCliWindow,
   cmRefreshState,
   cmRefreshSymbols,
   cmOptionDialog,

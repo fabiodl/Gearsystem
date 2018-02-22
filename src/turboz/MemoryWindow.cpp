@@ -9,22 +9,23 @@
 
 MemoryWindow::MemoryWindow(const TRect& bounds,const std::string& _title,MemoryInterface& _mem,AddressFinder& _addrFind):
   TWindowInit( &MemoryWindow::initFrame ),
-  AddressableWindow(bounds,"      000x",_addrFind),
+  AddressableWindow(bounds,std::string(256,' ').c_str(),_addrFind),
   format(Hex),
   mem(_mem),
-  addrFind(_addrFind)
+  addrFind(_addrFind),
+  titlePrefix(_title)
 {
-  scroller->setLimit(80,0x10000/16+1);
-  windowCommands.enableCmd(cmCycleFormat);    
-  memcpy(const_cast<char*>(title),_title.c_str(),(std::min)((size_t)6,_title.length()));
+  scroller->setLimit(80,mem.size()/16+1);
+  windowCommands.enableCmd(cmCycleFormat);
+  sprintf(const_cast<char*>(title),"%s %03X",_title.c_str(),0);
 }
 
 
-int MemoryWindow::addrToScroll(uint16_t addr){
+int MemoryWindow::addrToScroll(size_t addr){
   return addr/16;
 }
 
-uint16_t MemoryWindow::scrollToAddr(int scroll){
+size_t MemoryWindow::scrollToAddr(int scroll){
   return scroll*16;
 }
 
@@ -79,7 +80,8 @@ void MemoryWindow::generateContent(TView& sink,TPoint& delta,TPoint& size){
   
   for( int i = 0; i < size.y-1; i++ ){   
     int addr = scrollToAddr(delta.y + i);       // delta is scroller offset          
-    sprintf(buffer,"%03X ",delta.y+i);    
+    sprintf(buffer,"%04X ",(addr/16)%0x10000 );    
+
     for (int i=0;i<0x10;i++){
       sprintf(buffer+4+i*width,formatString,mem.Read(addr+i));
     }
@@ -88,8 +90,8 @@ void MemoryWindow::generateContent(TView& sink,TPoint& delta,TPoint& size){
   }
   
 }
-void MemoryWindow::updateTitle(uint16_t addr){
-  sprintf(const_cast<char*>(title)+strlen(title)-4,"%03X_",addr/16);
+void MemoryWindow::updateTitle(size_t addr){
+  sprintf(const_cast<char*>(title),"%s %03lX_",titlePrefix.c_str(),addr/16);
   frame->drawView();
 }
 
@@ -104,6 +106,7 @@ void MemoryWindow::handleEvent(TEvent& event){
   }
   if (event.what==evBroadcast&&event.message.command==cmRefreshState){
     redraw();
+    scroller->setLimit(80,mem.size()/16+1);
   }
 
   AddressableWindow::handleEvent(event);  //this handles the GoTo command

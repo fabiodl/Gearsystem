@@ -49,6 +49,7 @@ private:
   void loadBreakpoints();
   void storeBreakpoints();
   void storeConfig();
+  void cliStub();
 };
 
 #endif

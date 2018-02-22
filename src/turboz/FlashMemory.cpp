@@ -52,12 +52,22 @@ FlashMemory::FlashMemory(uint32_t size):data(size,0xFF){
 }
 
 
+
+
 void FlashMemory::load(const std::string& fname){
   std::ifstream is(fname.c_str(),std::ifstream::binary);
   is.seekg(0,is.end);
   data.resize(is.tellg());
   is.seekg(0,is.beg);
   is.read(reinterpret_cast<char*>(&data[0]),data.size());
+}
+
+void FlashMemory::append(const std::string& fname,size_t offset){
+  std::ifstream is(fname.c_str(),std::ifstream::binary);
+  is.seekg(0,is.end);
+  data.resize(offset+is.tellg());
+  is.seekg(0,is.beg);
+  is.read(reinterpret_cast<char*>(&data[offset]),data.size()-offset);
 }
 
 void FlashMemory::store(const std::string& fname){

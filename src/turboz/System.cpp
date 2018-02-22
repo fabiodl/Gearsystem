@@ -23,9 +23,14 @@ System::System():
 void System::loadCartridge(const std::string& s){  
   symbols.clear();
   disassembly.invalidateAll();
-  if (!cartridge.LoadFromFile(s.c_str())){
+  /*if (!cartridge.LoadFromFile(s.c_str())){
     throw std::runtime_error((std::string("Invalid ROM ")+s).c_str());
-  }
+    }*/
+  cartridge.load("/home/fabio/dev/s/workspace/mapper/mapper.sg");
+  symbols.loadFromFile("/home/fabio/dev/s/workspace/mapper/mapper.sym");
+
+  cartridge.append(s,0x100000);
+  
   size_t lastDot=s.find_last_of(".");
   
   if (lastDot!=std::string::npos){

@@ -24,6 +24,7 @@ public:
 
   FlashMemory(uint32_t size=0);
   void load(const std::string& fname);
+  void append(const std::string& fname,size_t offset);
   void store(const std::string& fname);
   void eval(uint32_t addr,uint8_t& data,bool _ce,bool _we,bool _oe);
   enum DetectorType{ERASESECTOR,WRITE,DETECTOR_NUM};
