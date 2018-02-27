@@ -39,7 +39,7 @@ TGSystem::TGSystem(SystemType systemType):
   input.Init();
   frameBuffer.setBlanked();
   //audio.Enable(false);
-  cpldClock.onTick=[](){};
+  cpldClock.onTick=[this](){rule.Tick();};
 }
 
 

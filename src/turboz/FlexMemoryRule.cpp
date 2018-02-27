@@ -51,11 +51,12 @@ FlexMemoryRule::FlexMemoryRule(Memory* pMemory, FlashCartridge* pCartridge):
   MemoryRule(pMemory,pCartridge),
   flash(pCartridge),
   sram(32*1024),ioram(32*1024),onboardRam(8*1024),
+  inspecting(false),
   sramIf(sram.getRaw(),sram.size()),
   ioramIf(ioram.getRaw(),ioram.size()),
   onboardIf(onboardRam.getRaw(),onboardRam.size()),
   flashIf([this](){return flash->GetROM();},[this](){return flash->GetROMSize();}),
-  addrIf(this)
+  addrIf(this,[this](size_t addr){return inspectRead(addr);},[](size_t,uint8_t){cerr<<"Unimplemented"<<endl;})
 {
   Reset();
 }
@@ -103,51 +104,62 @@ void FlexMemoryRule::sanityCheck(){
 
 }
 
-void FlexMemoryRule::eval(u16 address,u8& data,u8& ioramData){
+void FlexMemoryRule::Bus::setAddress(uint16_t address){
+  bankAddr=address&((1<<14)-1);
+  slotAddr=address>>14;
+ 
+}
 
-  uint16_t bankAddr=address&((1<<14)-1);
-  uint8_t slotAddr=address>>14;
-  
-  m->slotAddr=slotAddr;
-  m->bankAddrIn=bankAddr;
-  m->busDataIn=data;
-  m->miso=PhysicalIo::read();  
+
+void FlexMemoryRule::eval(){
+
+   
+  m->slotAddr=bus.slotAddr;
+  m->bankAddrIn=bus.bankAddr;
+  m->busDataIn=bus.data;
+  if (!inspecting){
+    m->miso=PhysicalIo::read();
+    std::cout<<"miso="<<(int)m->miso<<std::endl;
+  }
 
   m->eval();
 
-  PhysicalIo::write((m->mosi<<0)+
-                    (m->clk<<1)+
-                    (m->cs<<2)
-                    );
-  
+  if (!inspecting){
+    PhysicalIo::write((m->mosi<<0)+
+                      (m->clk<<1)+
+                      (m->cs<<2)
+                      );
+  }
   if (m->isBankAddrOut){
-    bankAddr=m->bankAddrOut;
+    bus.bankAddr=m->bankAddrOut;
   }
 
   if (m->isBusDataOut){
-    data=m->busDataOut;
+    bus.data=m->busDataOut;
   }
 
   if(m->isIoramDataOut){
-    ioramData=m->ioramDataOut;
+    bus.ioramData=m->ioramDataOut;
   }
 
   uint32_t flashFullAddr=
     (m->flashUHaddr<<(14+6))+
     (m->flashHaddr<<14)+
-    bankAddr;
+    bus.bankAddr;
   
-  flash->eval(flashFullAddr,data,m->flash_ce,m->flash_wr,m->_rd);
+  flash->eval(flashFullAddr,bus.data,m->flash_ce,m->flash_wr,m->_rd);
 
-  uint32_t sramFullAddr=(m->sramHaddr<<14)+bankAddr;
+  uint32_t sramFullAddr=(m->sramHaddr<<14)+bus.bankAddr;
 
-  sram.eval(sramFullAddr,data,m->sram_ce,m->_wr,m->_rd);
-  ioram.eval(m->ioramAddr,ioramData,0,m->ioram_wr,m->ioram_rd);
+  sram.eval(sramFullAddr,bus.data,m->sram_ce,m->_wr,m->_rd);
+  ioram.eval(m->ioramAddr,bus.ioramData,0,m->ioram_wr,m->ioram_rd);
 
-  bool isOnboardRam=0xC000<=address && address<=0XFFFF&&!m->killmem;
-  onboardRam.eval(address,data,!isOnboardRam,m->_wr,m->_rd);
 
-  onboardTracker.eval(address,data,!isOnboardRam,m->_wr);
+  bool isOnboardRam=bus.slotAddr==3&&!m->killmem;
+  onboardRam.eval(bus.bankAddr,bus.data,!isOnboardRam,m->_wr,m->_rd);
+
+  uint16_t zaddress=(bus.slotAddr<<14)|bus.bankAddr;
+  onboardTracker.eval(zaddress,bus.data,!isOnboardRam,m->_wr);
   
   sanityCheck();
 
@@ -169,22 +181,35 @@ void FlexMemoryRule::defaultInputs(){
 
 u8 FlexMemoryRule::PerformRead(u16 address){
   std::lock_guard<std::mutex> lock(access);
-  uint8_t data,ioramData;
-  eval(address,data,ioramData);
+  bus.setAddress(address);
+  eval();
   m->_rd=0;
-  eval(address,data,ioramData);  
+  eval();  
   m->_rd=1;
-  return data; 
+  return bus.data; 
 }//performRead
 
 
 
+u8 FlexMemoryRule::inspectRead(size_t address){
+  std::lock_guard<std::mutex> lock(access);
+  inspecting=true;
+  bus.setAddress(address);
+  eval();
+  m->_rd=0;
+  eval();  
+  m->_rd=1;
+  inspecting=false;
+  return bus.data; 
+}
+
 
 void FlexMemoryRule::PerformWrite(u16 address, u8 value){
   std::lock_guard<std::mutex> lock(access);
-  uint8_t ioramData;
+  bus.setAddress(address);
+  bus.data=value;
   m->_wr=0;
-  eval(address,value,ioramData);
+  eval();
   m->_wr=1;
 }
 
@@ -196,8 +221,9 @@ void FlexMemoryRule::Reset(){
 
 void FlexMemoryRule::Tick(){
   std::lock_guard<std::mutex> lock(access);
+  std::cout<<"tick"<<std::endl;
   m->cpldClk=~m->cpldClk;
-  m->eval();
+  eval();
 }
 
 

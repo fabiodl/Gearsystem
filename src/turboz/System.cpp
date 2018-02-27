@@ -7,7 +7,7 @@
 System::System():
   rule(&memory,&cartridge),
   processor(&memory),
-  disassembly(&memory,&symbols),
+  disassembly(&rule.addrIf,&symbols),
   addrFind(symbols,processor)
 {
   //add exceptions when it returns false 

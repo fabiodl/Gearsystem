@@ -80,10 +80,14 @@ void MemoryWindow::generateContent(TView& sink,TPoint& delta,TPoint& size){
   
   for( int i = 0; i < size.y-1; i++ ){   
     int addr = scrollToAddr(delta.y + i);       // delta is scroller offset          
-    sprintf(buffer,"%04X ",(addr/16)%0x10000 );    
-
+    int printAddr=(addr/16)%0x10000;
+    if (printAddr>=0x1000){
+      sprintf(buffer,"%04X ",printAddr );    
+    }else{
+      sprintf(buffer,"%03X_ ",printAddr );    
+    }
     for (int i=0;i<0x10;i++){
-      sprintf(buffer+4+i*width,formatString,mem.Read(addr+i));
+      sprintf(buffer+4+i*width,formatString,mem.inspectRead(addr+i));
     }
     ::writeLine(sink,i+1,buffer,color,delta,size);
     

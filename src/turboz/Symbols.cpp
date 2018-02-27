@@ -28,8 +28,20 @@ void Symbols::loadFromFile(const std::string& filename){
   int bank;int addr; std::string name;
   char colon;
   ss>>std::hex>>bank>>colon>>addr>>name;
-    
-  sym[addr]=name;
+
+  if (name.find("_sizeof_")!=std::string::npos){
+    continue;
+  }
+
+  if (sym.find(addr)==sym.end()){
+    sym[addr]=name;
+  }else{
+    if (name.length()<sym[addr].length()){
+      sym[addr]=name;
+    }
+  }
+  
+
   if (name.length()>maxLength){
     maxLength=name.length();
   }

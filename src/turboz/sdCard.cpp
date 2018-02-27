@@ -43,7 +43,7 @@ bool SDCard::pullBit(){
 }
 
 void SDCard::eval(bool mosi,bool clk,bool cs){  
-  //std::cout<<"cs:"<<cs<<"mosi:"<<mosi<<"clk:"<<clk<<std::endl;
+  std::cout<<"cs:"<<cs<<"mosi:"<<mosi<<"clk:"<<clk<<std::endl;
   if (!cs && clk && !oldClk){
     pushBit(mosi);
   }
@@ -64,7 +64,7 @@ bool SDCard::getMiso(){
 
 
 void SDCard::pushBit(bool b){
-  //std::cout<<"bit"<<b<<std::endl;  
+  std::cout<<"bit"<<b<<std::endl;  
   if (!b&&mode==FFMODE){
     mode=CMDMODE;
   }

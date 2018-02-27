@@ -3,7 +3,7 @@
 
 #define NO_FLAGS 0
 
-Disassembly::Disassembly(Memory* _memory,Symbols* _sym):
+Disassembly::Disassembly(MemoryInterface* _memory,Symbols* _sym):
   memory(_memory),
   sym(*_sym)
 {
@@ -14,7 +14,7 @@ Disassembly::Disassembly(Memory* _memory,Symbols* _sym):
 
 
 Z80EX_BYTE read_callback(Z80EX_WORD addr, void *user_data){
-  return static_cast<Memory*>(user_data)->Read(addr);
+  return static_cast<MemoryInterface*>(user_data)->inspectRead(addr);
 }
 
 int Disassembly::getInstructionLength(uint16_t addr){
@@ -105,7 +105,7 @@ Disassembly::Info Disassembly::disassembleWithSymbols(char* dis, int disMaxLengt
 }
 
 uint8_t Disassembly::getData(uint16_t addr){
-  return memory->Read(addr);
+  return memory->inspectRead(addr);
 }
 
 

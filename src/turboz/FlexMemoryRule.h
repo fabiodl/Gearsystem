@@ -27,12 +27,23 @@ public:
   void ToggleMenu();
 private:
   void defaultInputs();
-  void eval(u16 address,u8& data,u8& ioramData);
+  void setAddress();
+  void eval();
   void sanityCheck();
-
+  uint8_t inspectRead(size_t addr);
   std::mutex access;
   FlashMemory* flash;
   Sram sram,ioram,onboardRam;
+  class Bus{
+  public:
+    uint16_t bankAddr;
+    uint8_t slotAddr;
+    uint8_t ioramData;
+    uint8_t data;
+    void setAddress(uint16_t addr);
+  };
+  Bus bus;
+  bool inspecting;
 public:
   RawMemoryInterface sramIf,ioramIf,onboardIf;
   LambdaMemoryInterface flashIf;

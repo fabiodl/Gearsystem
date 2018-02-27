@@ -348,6 +348,7 @@ void TurboZ::cliStub(){
   actions["off"]=[this](){system.rule.onboardTracker.setEnable(false);};
   actions["print"]=[this](){system.rule.onboardTracker.printLast();};
   actions["ranges"]=[this](){system.rule.onboardTracker.printRanges();};
+  actions["clear"]=[this](){system.rule.onboardTracker.reset();};
   auto l=actions.find(cmd);
   if (l==actions.end()){
     std::cout<<"Unknown command ["<<cmd<<"]"<<std::endl;

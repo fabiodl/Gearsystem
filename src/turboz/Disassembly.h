@@ -3,13 +3,13 @@
 
 #include <set>
 #include <stdint.h>
-#include <Memory.h>
+#include "MemoryInterface.h"
 #include "Symbols.h"
 
 class Disassembly{
 
 public:
-  Disassembly(Memory* mem,Symbols* sym);
+  Disassembly(MemoryInterface* mem,Symbols* sym);
 
   enum State{
     Unknown,
@@ -48,7 +48,7 @@ private:
     
   static const size_t MEMORYSIZE=64*1024;
   State state[MEMORYSIZE];
-  Memory* memory;
+  MemoryInterface* memory;
   Symbols& sym;
   Format format;
 };
