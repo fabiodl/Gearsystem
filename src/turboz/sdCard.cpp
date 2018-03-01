@@ -43,7 +43,7 @@ bool SDCard::pullBit(){
 }
 
 void SDCard::eval(bool mosi,bool clk,bool cs){  
-  std::cout<<"cs:"<<cs<<"mosi:"<<mosi<<"clk:"<<clk<<std::endl;
+  //std::cout<<"cs:"<<cs<<"mosi:"<<mosi<<"clk:"<<clk<<std::endl;
   if (!cs && clk && !oldClk){
     pushBit(mosi);
   }
@@ -64,7 +64,7 @@ bool SDCard::getMiso(){
 
 
 void SDCard::pushBit(bool b){
-  std::cout<<"bit"<<b<<std::endl;  
+  //std::cout<<"bit"<<b<<std::endl;  
   if (!b&&mode==FFMODE){
     mode=CMDMODE;
   }
@@ -84,6 +84,9 @@ void SDCard::pushBit(bool b){
 void SDCard::loadFile(const std::string& fname){
   //f.close();
   f.open(fname.c_str(),std::ifstream::ate |std::ifstream::binary);
+  if (f.fail()){
+    std::cerr<<"Error opening "<<fname<<std::endl;
+  }
   fileSize=f.tellg();
   //std::cout<<fname<<" is "<<fileSize<<" bytes"<<std::endl;
 }
@@ -119,7 +122,7 @@ void SDCard::execCmd(){
       if (static_cast<std::ifstream::pos_type>((block+1)*512)>fileSize){
 	std::cerr<<"reading past the file end"<<std::endl;
       }
-      //std::cout<<"reading block "<<block<<std::endl;
+      std::cout<<"reading block "<<block<<std::endl;
       f.seekg(512*block);
       f.read(reinterpret_cast<char*>(&outBytes.data[2]),512);
     }

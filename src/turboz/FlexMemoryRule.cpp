@@ -119,7 +119,7 @@ void FlexMemoryRule::eval(){
   m->busDataIn=bus.data;
   if (!inspecting){
     m->miso=PhysicalIo::read();
-    std::cout<<"miso="<<(int)m->miso<<std::endl;
+    //std::cout<<"miso="<<(int)m->miso<<std::endl;
   }
 
   m->eval();
@@ -221,7 +221,7 @@ void FlexMemoryRule::Reset(){
 
 void FlexMemoryRule::Tick(){
   std::lock_guard<std::mutex> lock(access);
-  std::cout<<"tick"<<std::endl;
+  //std::cout<<"tick"<<std::endl;
   m->cpldClk=~m->cpldClk;
   eval();
 }
