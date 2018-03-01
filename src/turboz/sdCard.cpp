@@ -101,6 +101,7 @@ void SDCard::execCmd(){
     break;
   case CMD(0):
     //cout<<"reset"<<endl;
+    outBytes.data.clear();
     outBytes.data.push_back(0x01);
     break;
   case CMD(8):

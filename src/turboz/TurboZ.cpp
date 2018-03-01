@@ -503,7 +503,7 @@ TMenuBar *TurboZ::initMenuBar( TRect r )
 
      *new TSubMenu("Breakpt",kbNoKey)+
      *new TMenuItem("Clear",cmBreakpointsClear,kbNoKey,hcNoContext,"")+
-     *new TMenuItem("Reload",cmBreakpointsReload,kbF6,hcNoContext,"")
+     *new TMenuItem("Reload",cmBreakpointsReload,kbF6,hcNoContext,"F6")
      
 
      

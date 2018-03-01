@@ -19,9 +19,9 @@ TGOBJS = $(SHAREDOBJS) $(TGCOREOBJS) $(TGOD)/turbogear/TurboGear.o $(TGOD)/turbo
 
 VERILATORINCLUDE= /usr/share/verilator/include
 
-CFLAGS= -Wall -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I $(SRCDIR) -I $(SRCDIR)/z80ex/include -I $(SRCDIR)/piIo/ 
-CPPFLAGS= -std=c++11 `pkg-config --cflags libconfig++` -I . -I $(VERILATORINCLUDE)
-LDFLAGS= -lrhtv -pthread `pkg-config --libs libconfig++` $(VERILATORINCLUDE)/verilated.cpp
+CFLAGS= -Wall -O2 -g -DDISASM_GEARSYSTEM -I /usr/include/rhtvision -I $(SRCDIR) -I $(SRCDIR)/z80ex/include -I $(SRCDIR)/piIo/ 
+CPPFLAGS= -O2 -std=c++11 `pkg-config --cflags libconfig++` -I . -I $(VERILATORINCLUDE)
+LDFLAGS= -O2 -lrhtv -pthread `pkg-config --libs libconfig++` $(VERILATORINCLUDE)/verilated.cpp
 
 
 TGCFLAGS = $(CFLAGS) -I $(SRCDIR)/turboz

@@ -220,20 +220,24 @@ ExecutionWindow::ExecutionWindow(const TRect& bounds,System& _sys,TurboZ* _turbo
   };
   realtimeWork.job=[this]{
     ticks+=sys.Tick();
-    
-    std::chrono::time_point<std::chrono::high_resolution_clock> endTime=start+
-    std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>
+
+    auto virtTime= std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>
     (
      std::chrono::duration<float>(float(ticks)/freq)
      );
     
+    std::chrono::time_point<std::chrono::high_resolution_clock> endTime=start+virtTime;
+    
+     
     std::this_thread::sleep_until
     (
      endTime    
      );
+
+    /*auto elapsedFine=std::chrono::high_resolution_clock::now()-start;
+    std::chrono::duration<float> elapsed=elapsedFine;
+    std::cout<<"virtual"<<(float(ticks)/freq)<<"real"<<(elapsed.count()) <<std::endl;*/
     
-    
-    //std::this_thread::sleep_for(waitTime);
   };
   freq=1;
   
