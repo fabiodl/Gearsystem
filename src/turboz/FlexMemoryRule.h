@@ -36,11 +36,16 @@ private:
   Sram sram,ioram,onboardRam;
   class Bus{
   public:
-    uint16_t bankAddr;
-    uint8_t slotAddr;
+    uint16_t systemBankAddr;
+    uint8_t systemSlotAddr;
+    uint8_t systemData;
+    uint16_t localBankAddr;
+    uint8_t localData;    
     uint8_t ioramData;
-    uint8_t data;
+    bool flash_rd;
     void setAddress(uint16_t addr);
+    void systemToLocal(bool addrBufferCe,bool dataBufferCe);
+    void localToSystem(bool addrBufferCe,bool dataBufferCe);
   };
   Bus bus;
   bool inspecting;

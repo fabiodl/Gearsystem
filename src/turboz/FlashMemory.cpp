@@ -3,6 +3,12 @@
 #include <iostream>
 #include <cstring>
 
+using namespace std;
+
+static constexpr int WRITE_BUSY_CYCLES=33; //ceil(9us*f)
+static constexpr int ERASE_BUSY_CYCLES=130;  //130 is only 36u, which is way faster than the real 0.7s
+
+
 class SetKeys{
 public:
   FlashMemory::ProgramKeys& keys;
@@ -30,7 +36,7 @@ void setSectors(std::vector<FlashMemory::SectorInfo>& sectors,const std::vector<
 constexpr uint32_t operator "" _Kb (unsigned long long int x )
 { return 1024*x; }
 
-FlashMemory::FlashMemory(uint32_t size):data(size,0xFF){
+FlashMemory::FlashMemory(uint32_t size):data(size,0xFF),prev_we(true),busyCycles(0){
   SetKeys(detectors[ERASESECTOR].keys)
     .add(0xAAA,0xFFF,0xAA,0xFF)
     .add(0x555,0xFFF,0X55,0xFF)
@@ -80,9 +86,15 @@ FlashMemory::ProgramDetector::ProgramDetector(){
   matchCount=0;
 }
 
+void FlashMemory::ProgramDetector::reset(){
+  matchCount=0;
+}
+
 void FlashMemory::ProgramDetector::write(uint32_t addr,uint8_t data){
+  //cout<<this<<" Detector write "<<hex<<addr<<" "<<(int)data<<dec<<endl;
   if (keys[matchCount].first.isMatch(addr) && keys[matchCount].second.isMatch(data)){
     matchCount++;
+    //cout<<"matchCount"<<matchCount<<endl;
   }else{
     matchCount=0;
   }
@@ -100,19 +112,27 @@ void FlashMemory::write(uint32_t addr,uint8_t datalines){
     addr=addr%data.size();
   }
   if (data[addr]!=0xFF){
-    std::cerr<<"warning: writing over data"<<std::endl;
+    std::cerr<<hex<<"flash warning: writing "<<(int)datalines <<" at "<<addr<<" which contains data:"<<(int)data[addr] <<dec<<std::endl;
+  }else{
+    cout<<hex<<"wrote "<<(int)datalines<<" to "<<addr<<dec<<endl;
   }
-  data[addr]=datalines;
+  busyCycles=WRITE_BUSY_CYCLES;
+  data[addr]=data[addr]&datalines;
 }
   
 
 void FlashMemory::eraseSector(uint32_t sector){
   SectorInfo& info=sectors[sector];
+  std::cout<<"erasing sector "<<sector<<" starting at "<<info.start<<" size "<<info.size<<endl;
   memset(&data[info.start],0xFF,info.size);
+  busyCycles=ERASE_BUSY_CYCLES;
 }
 
 void FlashMemory::eval(uint32_t addr,uint8_t& datalines,bool _ce,bool _we,bool _oe){
-  if (_ce) return;
+  if (_ce){
+    prev_we=_we;
+    return;
+  }
   if (!_oe && !_we){
     std::cerr<<"Flash memory has simulataneously _oe and _we low"<<std::endl;
   }
@@ -127,19 +147,35 @@ void FlashMemory::eval(uint32_t addr,uint8_t& datalines,bool _ce,bool _we,bool _
     }
     datalines=data[addr];
   }
-  if (!_we){
+
+  if (!_we&&prev_we){
     for (int i=0;i<DETECTOR_NUM;i++){
       detectors[i].write(addr,datalines);
     }
     if (detectors[WRITE].isActive()){
+      detectors[WRITE].reset();
       write(addr,datalines);
     }
     if (detectors[ERASESECTOR].isActive()){
+      detectors[ERASESECTOR].reset();
       eraseSector(addr);
     }
   }
-
+  prev_we=_we;
 }
+
+
+bool FlashMemory::isBusy(){
+  return busyCycles;
+}
+
+
+void FlashMemory::tick(){
+  if (busyCycles){
+    busyCycles--;
+  }
+}
+
 
 int FlashMemory::GetROMSize(){
   return data.size();

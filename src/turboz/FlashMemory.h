@@ -18,6 +18,7 @@ public:
     ProgramKeys keys;
     void write(uint32_t addr,uint8_t data);
     bool isActive() const;
+    void reset();
   private:
     size_t matchCount;
   };
@@ -27,6 +28,8 @@ public:
   void append(const std::string& fname,size_t offset);
   void store(const std::string& fname);
   void eval(uint32_t addr,uint8_t& data,bool _ce,bool _we,bool _oe);
+  bool isBusy();
+  void tick();
   enum DetectorType{ERASESECTOR,WRITE,DETECTOR_NUM};
   ProgramDetector detectors[DETECTOR_NUM];
   struct SectorInfo{
@@ -40,6 +43,8 @@ private:
   std::vector<uint8_t> data;
   void write(uint32_t addr,uint8_t data);
   void eraseSector(uint32_t addr);
+  bool prev_we;
+  int busyCycles;
 };
 
 
