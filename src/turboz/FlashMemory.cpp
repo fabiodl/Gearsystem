@@ -36,7 +36,7 @@ void setSectors(std::vector<FlashMemory::SectorInfo>& sectors,const std::vector<
 constexpr uint32_t operator "" _Kb (unsigned long long int x )
 { return 1024*x; }
 
-FlashMemory::FlashMemory(uint32_t size):data(size,0xFF),prev_we(true),busyCycles(0){
+FlashMemory::FlashMemory(uint32_t size,bool topType):data(size,0xFF),prev_we(true),busyCycles(0){
   SetKeys(detectors[ERASESECTOR].keys)
     .add(0xAAA,0xFFF,0xAA,0xFF)
     .add(0x555,0xFFF,0X55,0xFF)
@@ -51,10 +51,15 @@ FlashMemory::FlashMemory(uint32_t size):data(size,0xFF),prev_we(true),busyCycles
     .add(0x000,0x000,0x00,0x00);
   //if it is a  B type
 
-  std::vector<uint32_t> sizes={16_Kb,8_Kb,8_Kb,32_Kb};
-  sizes.insert(sizes.end(),31,64_Kb);  
-  setSectors(sectors,sizes,8_Kb);
-    
+  if (topType){
+    std::vector<uint32_t> sizes={32_Kb,8_Kb,8_Kb,16_Kb};
+    sizes.insert(sizes.begin(),31,64_Kb);  
+    setSectors(sectors,sizes,8_Kb);
+  }else{       
+    std::vector<uint32_t> sizes={16_Kb,8_Kb,8_Kb,32_Kb};
+    sizes.insert(sizes.end(),31,64_Kb);  
+    setSectors(sectors,sizes,8_Kb);
+  }
 }
 
 
@@ -158,7 +163,7 @@ void FlashMemory::eval(uint32_t addr,uint8_t& datalines,bool _ce,bool _we,bool _
     }
     if (detectors[ERASESECTOR].isActive()){
       detectors[ERASESECTOR].reset();
-      eraseSector(addr);
+      eraseSector(addr/(8*1024));
     }
   }
   prev_we=_we;

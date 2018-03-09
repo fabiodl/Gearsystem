@@ -140,18 +140,17 @@ void FlexMemoryRule::eval(){
 
   
   bus.systemToLocal(m->addrBufferCe,m->dataBufferCe);
-                    
+  m->inspecting=inspecting;
   m->slotAddr=bus.systemSlotAddr;
   m->bankAddrIn=bus.localBankAddr;
   m->busDataIn=bus.localData;
+  m->ioramDataIn=bus.ioramData;
   if (!inspecting){
     m->miso=PhysicalIo::read();
     //std::cout<<"miso="<<(int)m->miso<<std::endl;
   }
-  m->flashBusy=flash->isBusy();
+  m->_flashBusy=!flash->isBusy();
   m->eval();
-
-  
   if (!inspecting){
     PhysicalIo::write((m->mosi<<0)+
                       (m->clk<<1)+
@@ -203,7 +202,7 @@ void FlexMemoryRule::defaultInputs(){
   m->_mreq=0;
   m->_ce=0;
   m->_unlockOnPause=1;
-  m->flashBusy=0;
+  m->_flashBusy=1;
   m->cpldClk=0;
   m->_ioWr=1;
   m->_ioRd=1;
@@ -215,7 +214,8 @@ u8 FlexMemoryRule::PerformRead(u16 address){
   bus.setAddress(address);
   eval();
   m->_rd=0;
-  eval();  
+  eval();
+  eval();
   m->_rd=1;
   return bus.systemData; 
 }//performRead
@@ -228,7 +228,8 @@ u8 FlexMemoryRule::inspectRead(size_t address){
   bus.setAddress(address);
   eval();
   m->_rd=0;
-  eval();  
+  eval();
+  eval();
   m->_rd=1;
   inspecting=false;
   return bus.systemData; 
@@ -240,6 +241,7 @@ void FlexMemoryRule::PerformWrite(u16 address, u8 value){
   bus.setAddress(address);
   bus.systemData=value;
   m->_wr=0;
+  eval();
   eval();
   m->_wr=1;
 }

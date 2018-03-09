@@ -23,7 +23,7 @@ public:
     size_t matchCount;
   };
 
-  FlashMemory(uint32_t size=0);
+  FlashMemory(uint32_t size=0,bool topType=true);
   void load(const std::string& fname);
   void append(const std::string& fname,size_t offset);
   void store(const std::string& fname);
