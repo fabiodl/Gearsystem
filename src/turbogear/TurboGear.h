@@ -17,6 +17,8 @@ private:
   SDLInput sdlInput;
   FrameBuffer& frameBuffer;
   InputBuffer& inputBuffer;
+  void addCliActions();
+  TGSystem& tgs;
 };
 
 

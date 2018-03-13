@@ -21,7 +21,8 @@ enum SystemType{GAMEGEAR,MASTERSYSTEM};
   FrameBuffer frameBuffer;
   InputBuffer inputBuffer;
   TGSystem(SystemType systemType);
-  virtual unsigned int Tick();
+  virtual unsigned int Tick();  
+  uint32_t totalTicks=0;
 };
 
 #endif

@@ -76,6 +76,7 @@ void FlashMemory::load(const std::string& fname){
 void FlashMemory::append(const std::string& fname,size_t offset){
   std::ifstream is(fname.c_str(),std::ifstream::binary);
   is.seekg(0,is.end);
+  //cout<<"appending "<<is.tellg()<<" bytes"<<endl;
   data.resize(offset+is.tellg());
   is.seekg(0,is.beg);
   is.read(reinterpret_cast<char*>(&data[offset]),data.size()-offset);

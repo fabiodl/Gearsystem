@@ -26,6 +26,7 @@ public:
   void requestHalt();
   void onExit();
   ~TurboZ();
+  std::map<std::string,std::function<void()> > actions;
 private:
   template<typename WindowType> void showWindow();
   template<typename WindowType> void addWindow();
@@ -50,6 +51,7 @@ private:
   void storeBreakpoints();
   void storeConfig();
   void cliStub();
+  void addCliActions();
 };
 
 #endif

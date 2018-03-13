@@ -273,6 +273,7 @@ TurboZ::TurboZ(System& _system) :
   }else{
     disableCommand(cmReload);
   }
+  addCliActions();
 }
 
 void TurboZ::loadRam(){
@@ -342,13 +343,6 @@ void TurboZ::cliStub(){
   std::cout<<"Enter command:"<<std::flush;
   std::string cmd;
   std::cin>>cmd;
-
-  std::map<std::string,std::function<void()> > actions;
-  actions["on"]=[this](){system.rule.onboardTracker.setEnable(true);};
-  actions["off"]=[this](){system.rule.onboardTracker.setEnable(false);};
-  actions["print"]=[this](){system.rule.onboardTracker.printLast();};
-  actions["ranges"]=[this](){system.rule.onboardTracker.printRanges();};
-  actions["clear"]=[this](){system.rule.onboardTracker.reset();};
   auto l=actions.find(cmd);
   if (l==actions.end()){
     std::cout<<"Unknown command ["<<cmd<<"]"<<std::endl;
@@ -755,5 +749,11 @@ TurboZ::~TurboZ(){
   onExit();
 }
 
-
+void TurboZ::addCliActions(){
+  actions["on"]=[this](){system.rule.onboardTracker.setEnable(true);};
+  actions["off"]=[this](){system.rule.onboardTracker.setEnable(false);};
+  actions["print"]=[this](){system.rule.onboardTracker.printLast();};
+  actions["ranges"]=[this](){system.rule.onboardTracker.printRanges();};
+  actions["clear"]=[this](){system.rule.onboardTracker.reset();};
+}
 

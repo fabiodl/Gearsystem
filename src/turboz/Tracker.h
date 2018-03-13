@@ -12,7 +12,7 @@ public:
   void eval(uint32_t addr,uint8_t &data,bool _ce,bool _we);
   void reset();
   void printLast();
-  void printRanges();
+  void printRanges();  
 private:
   std::map<uint32_t,std::list<uint8_t> > writes;
   bool enabled;

@@ -2,6 +2,7 @@
 #include <GameGearIOPorts.h>
 #include <SmsIOPorts.h>
 
+
 template<typename T>
 class NoAudio:public T{
 public:
@@ -40,6 +41,7 @@ TGSystem::TGSystem(SystemType systemType):
   frameBuffer.setBlanked();
   //audio.Enable(false);
   cpldClock.onTick=[this](){rule.Tick();};
+ 
 }
 
 
@@ -57,5 +59,8 @@ unsigned int TGSystem::Tick(){
     //audio.EndFrame();
     frameBuffer.setBlanked();
   }
+  totalTicks+=cpuCycles;
   return cpuCycles;
 }
+
+
